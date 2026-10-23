@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, "/tmp/work")
+import os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data1 import S
 from data2 import S2
 from reportlab.lib.pagesizes import A4

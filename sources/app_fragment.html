@@ -1,0 +1,824 @@
+<title>Word Rider</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Concept: a surf-session game board. Deep lagoon navy ground, coral action colour, one tropical hue per theme. */
+:root{
+  --bg:#061826; --bg2:#0a2236; --surface:#0e2c43; --surface2:#143a57; --line:#215675;
+  --text:#eaf6ff; --muted:#8fb3c9; --coral:#ff6a4d; --coral-d:#e2492d; --lagoon:#19d3c5; --sun:#ffd23f;
+  --good:#35e08f; --good-bg:#0d3a2c; --bad:#ff5a79; --bad-bg:#3d1626;
+  --display:'Lilita One','Impact','Arial Black',sans-serif; --body:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:auto}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+  background-image:radial-gradient(900px 500px at 85% -10%,rgba(25,211,197,.16),transparent 60%),radial-gradient(700px 480px at -10% 8%,rgba(255,106,77,.13),transparent 60%);
+  background-attachment:fixed;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding-block:18px 56px}
+.tabular{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-size:30px;letter-spacing:.5px;line-height:1;display:flex;align-items:center;gap:10px}
+.brand b{color:var(--coral);font-weight:400}
+.brand svg{width:38px;height:24px;flex:none}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;color:var(--text)}
+.chip:hover{background:var(--surface2)}
+.chip[aria-pressed="true"]{background:var(--lagoon);color:#032b2a;border-color:var(--lagoon)}
+
+/* rank */
+.rank{margin-top:16px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.rank .lvl{font-family:var(--display);font-size:22px;line-height:1.1}
+.rank .sub{color:var(--muted);font-size:13px}
+.bar{height:12px;border-radius:99px;background:#0a2438;overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--lagoon),var(--sun));transition:width .5s ease}
+.xp{font-family:var(--display);font-size:22px;color:var(--sun);text-align:right}
+.xp small{display:block;font-family:var(--body);font-size:12px;color:var(--muted)}
+
+/* hero start */
+.hero{margin-top:16px;display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+.start{position:relative;overflow:hidden;text-align:left;background:linear-gradient(135deg,var(--coral),#ff9a4d);color:#2b0c05;border-radius:18px;padding:20px 22px;min-height:132px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:0 8px 0 var(--coral-d)}
+.start:hover{transform:translateY(2px);box-shadow:0 6px 0 var(--coral-d)}
+.start:active{transform:translateY(6px);box-shadow:0 2px 0 var(--coral-d)}
+.start h2{font-family:var(--display);font-weight:400;font-size:32px;line-height:1;margin:0}
+.start p{margin:0;font-weight:600;max-width:34ch}
+.start .go{align-self:flex-start;font-family:var(--display);background:#2b0c05;color:#ffd9c9;padding:7px 16px;border-radius:99px;font-size:17px}
+.start svg.wave{position:absolute;right:-10px;bottom:-6px;width:55%;opacity:.28}
+.side{display:flex;flex-direction:column;gap:10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.panel h3{margin:0 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;background:#0a2438;border:1px solid var(--line);font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--sun);color:#3a2a00;border-color:var(--sun)}
+.weak{width:100%;padding:11px 12px;border-radius:12px;background:#0a2438;border:1px dashed var(--lagoon);font-weight:700;color:var(--lagoon)}
+.weak:disabled{opacity:.45;cursor:not-allowed;border-color:var(--line);color:var(--muted)}
+.weak:not(:disabled):hover{background:#0c2e45}
+
+h2.sec{font-family:var(--display);font-weight:400;font-size:24px;margin:26px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.theme{--c:var(--lagoon);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .12s,border-color .12s}
+.theme:hover{transform:translateY(-3px);border-color:var(--c)}
+.theme .tag{font-family:var(--display);font-size:22px;letter-spacing:1px;color:#07131d;background:var(--c);align-self:flex-start;padding:4px 11px;border-radius:9px;line-height:1.1}
+.theme .nm{font-weight:700;font-size:17px;line-height:1.2}
+.theme .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+.theme .meta .rv{color:var(--bad)}
+.mini{height:8px;border-radius:99px;background:#0a2438;overflow:hidden}
+.mini>i{display:block;height:100%;background:var(--c);border-radius:99px}
+
+/* quiz */
+.qtop{display:flex;align-items:center;gap:12px}
+.back{padding:9px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px}
+.back:hover{background:var(--surface2)}
+.qmeta{flex:1;min-width:0}
+.qmeta .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qmeta .st{color:var(--muted);font-size:13px}
+.badge{font-family:var(--display);padding:6px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:18px}
+.badge.fire{color:var(--sun)}
+.badge.xpg{color:var(--lagoon)}
+.track{position:relative;margin-top:14px;height:16px;border-radius:99px;background:#0a2438;border:1px solid var(--line)}
+.track>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--lagoon),#7af0e4);transition:width .45s ease}
+.track .rider{position:absolute;top:-9px;width:34px;height:34px;transform:translateX(-50%);transition:left .45s ease}
+.qcard{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 22px 24px}
+.qtag{display:inline-block;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;border-radius:8px;background:var(--lagoon);color:#032b2a}
+.qprompt{font-size:22px;line-height:1.35;margin:14px 0 4px;font-weight:600;text-wrap:balance}
+.qsub{color:var(--muted);margin:0 0 4px}
+.en{font-family:var(--display);color:var(--sun);font-size:1.18em;letter-spacing:.3px;font-weight:400}
+.fr{color:var(--lagoon);font-weight:700}
+.sent{font-size:23px;line-height:1.4;margin:14px 0 4px;font-weight:500}
+.sent .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--sun);text-align:center;color:var(--sun);font-family:var(--display);padding:0 6px}
+.clue{display:inline-block;margin-top:6px;background:#0a2438;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--muted);font-size:15px}
+.clue b{color:var(--lagoon)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 14px;border-radius:14px;background:var(--surface2);border:2px solid var(--line);font-weight:600;font-size:17px;min-height:58px;min-width:0;overflow-wrap:anywhere}
+.opt .k{flex:none;width:26px;height:26px;border-radius:8px;background:#0a2438;display:grid;place-items:center;font-size:13px;color:var(--muted);font-weight:700}
+.opt:not(:disabled):hover{border-color:var(--lagoon);transform:translateY(-1px)}
+.opt.sel{border-color:var(--sun)}
+.opt.good{background:var(--good-bg);border-color:var(--good)}
+.opt.good .k{background:var(--good);color:#04281b}
+.opt.bad{background:var(--bad-bg);border-color:var(--bad)}
+.opt.bad .k{background:var(--bad);color:#2a0612}
+.opt:disabled{cursor:default}
+.tf{grid-template-columns:1fr 1fr}
+.tf .opt{justify-content:center;font-family:var(--display);font-size:24px;font-weight:400;min-height:70px}
+.ans{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.ans input{flex:1;min-width:180px;font:inherit;font-size:20px;font-weight:600;padding:13px 15px;border-radius:14px;border:2px solid var(--line);background:#0a2438;color:var(--text)}
+.ans input:focus{border-color:var(--sun);outline:none}
+.ans input.good{border-color:var(--good);background:var(--good-bg)}
+.ans input.bad{border-color:var(--bad);background:var(--bad-bg)}
+.btn{padding:13px 22px;border-radius:14px;background:var(--coral);color:#2b0c05;font-family:var(--display);font-size:19px;box-shadow:0 4px 0 var(--coral-d)}
+.btn:hover{transform:translateY(1px);box-shadow:0 3px 0 var(--coral-d)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
+.btn.ghost{background:var(--surface2);color:var(--text);box-shadow:0 4px 0 #0a2438;border:1px solid var(--line)}
+.hintrow{display:flex;gap:10px;align-items:center;margin-top:10px;color:var(--muted);font-size:14px;flex-wrap:wrap}
+.hint{padding:6px 12px;border-radius:9px;background:#0a2438;border:1px solid var(--line);font-weight:600;font-size:14px}
+.hintshow{font-family:var(--display);letter-spacing:3px;color:var(--sun);font-size:20px}
+.play{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:var(--lagoon);color:#032b2a;font-weight:700}
+.play svg{width:22px;height:22px}
+.play.slow{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.sbtn{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);display:inline-grid;place-items:center;vertical-align:middle;margin-left:8px}
+.sbtn svg{width:19px;height:19px}
+.sbtn:hover{border-color:var(--lagoon)}
+
+/* scramble */
+.slots,.pool{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.slot{width:44px;height:52px;border-radius:12px;border:2px dashed var(--line);display:grid;place-items:center;font-family:var(--display);font-size:26px;text-transform:lowercase}
+.slot.f{border-style:solid;border-color:var(--sun);background:#0a2438;color:var(--sun);cursor:pointer}
+.slot.good{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+.slot.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.tile{width:46px;height:54px;border-radius:12px;background:var(--surface2);border:2px solid var(--line);font-family:var(--display);font-size:26px;text-transform:lowercase;box-shadow:0 4px 0 #0a2438}
+.tile:not(:disabled):hover{border-color:var(--lagoon)}
+.tile:disabled{opacity:.25;box-shadow:none}
+
+/* match */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:16px}
+.mcol{display:flex;flex-direction:column;gap:9px;min-width:0}
+.mi{padding:12px 12px;border-radius:12px;background:var(--surface2);border:2px solid var(--line);font-weight:600;text-align:left;min-height:48px;overflow-wrap:anywhere}
+.mi.en{font-family:var(--body);color:var(--text);font-size:17px}
+.mi.sel{border-color:var(--sun);background:#2a2a12}
+.mi.done{border-color:var(--good);background:var(--good-bg);opacity:.85}
+.mi.shake{animation:shake .35s;border-color:var(--bad);background:var(--bad-bg)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* feedback */
+.fb{margin-top:18px;border-radius:16px;padding:16px 18px;border:2px solid;animation:rise .25s ease}
+.fb.ok{background:var(--good-bg);border-color:var(--good)}
+.fb.ko{background:var(--bad-bg);border-color:var(--bad)}
+.fb h4{margin:0 0 6px;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.1}
+.fb.ok h4{color:var(--good)} .fb.ko h4{color:var(--bad)}
+.fb p{margin:5px 0;font-size:16px}
+.fb .full{font-size:19px;font-weight:600}
+.fb .tip{color:var(--muted);font-size:14px}
+.fb .row{display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.diff i{font-style:normal;color:var(--bad);text-decoration:underline;font-weight:700}
+.diff b{color:var(--good)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.xpfloat{position:fixed;left:50%;top:22%;font-family:var(--display);font-size:34px;color:var(--sun);pointer-events:none;animation:floatup 1s ease forwards;z-index:30}
+@keyframes floatup{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-60px)}}
+
+/* results */
+.res{margin-top:22px;text-align:center}
+.res .big{font-family:var(--display);font-size:72px;line-height:1;color:var(--sun)}
+.res .big small{font-size:32px;color:var(--muted)}
+.res h2{font-family:var(--display);font-weight:400;font-size:30px;margin:6px 0}
+.stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 18px;min-width:120px}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:26px}
+.stat span{color:var(--muted);font-size:13px}
+.rev{margin:18px auto 0;max-width:620px;text-align:left}
+.rev .it{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);margin-top:8px}
+.rev .it span:first-child{font-weight:700}
+.ctas{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+
+/* save sheet */
+.sheet{max-width:640px;margin:22px auto 0}
+.sheet textarea{width:100%;min-height:120px;border-radius:12px;border:2px solid var(--line);background:#0a2438;color:var(--text);font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:12px}
+.note{color:var(--muted);font-size:14px}
+.confetti{position:fixed;top:-12px;width:10px;height:14px;z-index:40;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+@media (max-width:720px){
+  .hero{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr}
+  .qprompt{font-size:20px}.sent{font-size:20px}
+  .rank{grid-template-columns:1fr auto}.rank .barwrap{grid-column:1/-1;order:3}
+  .brand{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+'use strict';
+var D={"secs":[{"id":"v1","name":"Vocabulaire courant","tag":"COM","color":"#ff6a4d","items":[{"e":"thing","f":"chose","k":"noun"},{"e":"people","f":"gens","k":"noun"},{"e":"person","f":"personne","k":"noun"},{"e":"man","f":"homme","k":"noun"},{"e":"woman","f":"femme","k":"noun"},{"e":"child (children)","f":"enfant(s)","k":"noun"},{"e":"boy","f":"garçon","k":"noun"},{"e":"girl","f":"fille","k":"noun"},{"e":"friend","f":"ami(e)","k":"noun"},{"e":"name","f":"nom, prénom","k":"noun"},{"e":"place","f":"endroit","k":"noun"},{"e":"way","f":"manière, chemin","k":"noun"},{"e":"life","f":"vie","k":"noun"},{"e":"world","f":"monde","k":"noun"},{"e":"country","f":"pays","k":"noun"},{"e":"city","f":"ville","k":"noun"},{"e":"day","f":"jour","k":"noun"},{"e":"night","f":"nuit","k":"noun"},{"e":"time","f":"temps, fois","k":"noun"},{"e":"year","f":"année","k":"noun"},{"e":"week","f":"semaine","k":"noun"},{"e":"month","f":"mois","k":"noun"},{"e":"hour","f":"heure","k":"noun"},{"e":"minute","f":"minute","k":"noun"},{"e":"water","f":"eau","k":"noun"},{"e":"money","f":"argent","k":"noun"},{"e":"work","f":"travail","k":"noun"},{"e":"job","f":"emploi","k":"noun"},{"e":"problem","f":"problème","k":"noun"},{"e":"question","f":"question","k":"noun"},{"e":"answer","f":"réponse","k":"noun"},{"e":"idea","f":"idée","k":"noun"},{"e":"story","f":"histoire (récit)","k":"noun"},{"e":"word","f":"mot","k":"noun"},{"e":"number","f":"nombre, numéro","k":"noun"},{"e":"group","f":"groupe","k":"noun"},{"e":"team","f":"équipe","k":"noun"},{"e":"party","f":"fête","k":"noun"},{"e":"game","f":"jeu, match","k":"noun"},{"e":"music","f":"musique","k":"noun"},{"e":"song","f":"chanson","k":"noun"},{"e":"film","f":"film","k":"noun"},{"e":"book","f":"livre","k":"noun"},{"e":"picture","f":"image","k":"noun"},{"e":"letter","f":"lettre","k":"noun"},{"e":"message","f":"message","k":"noun"},{"e":"news","f":"nouvelles","k":"noun"},{"e":"reason","f":"raison","k":"noun"},{"e":"example","f":"exemple","k":"noun"},{"e":"part","f":"partie","k":"noun"},{"e":"side","f":"côté","k":"noun"},{"e":"end","f":"fin","k":"noun"},{"e":"beginning","f":"début","k":"noun"},{"e":"top","f":"haut, sommet","k":"noun"},{"e":"bottom","f":"bas, fond","k":"noun"},{"e":"kind","f":"sorte, gentil","k":"noun"},{"e":"power","f":"pouvoir, force","k":"noun"},{"e":"health","f":"santé","k":"noun"},{"e":"free time","f":"temps libre","k":"noun"},{"e":"hobby","f":"passe-temps","k":"noun"},{"e":"weekend","f":"week-end","k":"noun"},{"e":"holiday","f":"vacances, jour férié","k":"noun"},{"e":"trip","f":"voyage, sortie","k":"noun"},{"e":"gift","f":"cadeau","k":"noun"},{"e":"birthday","f":"anniversaire","k":"noun"},{"e":"secret","f":"secret","k":"noun"},{"e":"dream","f":"rêve","k":"noun"},{"e":"fear","f":"peur","k":"noun"},{"e":"luck","f":"chance","k":"noun"},{"e":"pleasure","f":"plaisir","k":"noun"},{"e":"help","f":"aide","k":"noun"},{"e":"rule","f":"règle","k":"noun"},{"e":"choice","f":"choix","k":"noun"},{"e":"change","f":"changement","k":"noun"},{"e":"difference","f":"différence","k":"noun"},{"e":"result","f":"résultat","k":"noun"},{"e":"point","f":"point","k":"noun"},{"e":"line","f":"ligne, file","k":"noun"},{"e":"size","f":"taille","k":"noun"},{"e":"age","f":"âge","k":"noun"},{"e":"sign","f":"panneau, signe","k":"noun"},{"e":"level","f":"niveau","k":"noun"},{"e":"mistake","f":"erreur","k":"noun"},{"e":"truth","f":"vérité","k":"noun"},{"e":"lie","f":"mensonge","k":"noun"},{"e":"peace","f":"paix","k":"noun"},{"e":"war","f":"guerre","k":"noun"},{"e":"law","f":"loi","k":"noun"},{"e":"language","f":"langue","k":"noun"},{"e":"society","f":"société","k":"noun"},{"e":"history","f":"histoire (matière)","k":"noun"},{"e":"future","f":"avenir","k":"noun"},{"e":"past","f":"passé","k":"noun"},{"e":"habit","f":"habitude","k":"noun"},{"e":"goal","f":"but, objectif","k":"noun"},{"e":"plan","f":"projet, plan","k":"noun"}]},{"id":"v2","name":"Le corps humain","tag":"BODY","color":"#19d3c5","items":[{"e":"body","f":"corps","k":"noun"},{"e":"head","f":"tête","k":"noun"},{"e":"hair","f":"cheveux","k":"noun"},{"e":"face","f":"visage","k":"noun"},{"e":"forehead","f":"front","k":"noun"},{"e":"eye","f":"œil","k":"noun"},{"e":"eyebrow","f":"sourcil","k":"noun"},{"e":"eyelash","f":"cil","k":"noun"},{"e":"ear","f":"oreille","k":"noun"},{"e":"nose","f":"nez","k":"noun"},{"e":"mouth","f":"bouche","k":"noun"},{"e":"lip","f":"lèvre","k":"noun"},{"e":"tooth (teeth)","f":"dent(s)","k":"noun"},{"e":"tongue","f":"langue","k":"noun"},{"e":"cheek","f":"joue","k":"noun"},{"e":"chin","f":"menton","k":"noun"},{"e":"beard","f":"barbe","k":"noun"},{"e":"neck","f":"cou","k":"noun"},{"e":"throat","f":"gorge","k":"noun"},{"e":"shoulder","f":"épaule","k":"noun"},{"e":"arm","f":"bras","k":"noun"},{"e":"elbow","f":"coude","k":"noun"},{"e":"wrist","f":"poignet","k":"noun"},{"e":"hand","f":"main","k":"noun"},{"e":"palm","f":"paume","k":"noun"},{"e":"finger","f":"doigt","k":"noun"},{"e":"thumb","f":"pouce","k":"noun"},{"e":"nail","f":"ongle","k":"noun"},{"e":"fist","f":"poing","k":"noun"},{"e":"chest","f":"poitrine, torse","k":"noun"},{"e":"back","f":"dos","k":"noun"},{"e":"spine","f":"colonne vertébrale","k":"noun"},{"e":"stomach","f":"estomac, ventre","k":"noun"},{"e":"belly","f":"ventre","k":"noun"},{"e":"waist","f":"taille","k":"noun"},{"e":"hip","f":"hanche","k":"noun"},{"e":"leg","f":"jambe","k":"noun"},{"e":"thigh","f":"cuisse","k":"noun"},{"e":"knee","f":"genou","k":"noun"},{"e":"shin","f":"tibia","k":"noun"},{"e":"calf","f":"mollet","k":"noun"},{"e":"ankle","f":"cheville","k":"noun"},{"e":"foot (feet)","f":"pied(s)","k":"noun"},{"e":"toe","f":"orteil","k":"noun"},{"e":"heel","f":"talon","k":"noun"},{"e":"skin","f":"peau","k":"noun"},{"e":"bone","f":"os","k":"noun"},{"e":"rib","f":"côte","k":"noun"},{"e":"muscle","f":"muscle","k":"noun"},{"e":"joint","f":"articulation","k":"noun"},{"e":"blood","f":"sang","k":"gen"},{"e":"heart","f":"cœur","k":"noun"},{"e":"lung","f":"poumon","k":"noun"},{"e":"brain","f":"cerveau","k":"noun"},{"e":"skeleton","f":"squelette","k":"gen"},{"e":"breath","f":"souffle, respiration","k":"gen"},{"e":"sweat","f":"sueur","k":"gen"},{"e":"voice","f":"voix","k":"gen"},{"e":"scar","f":"cicatrice","k":"noun"},{"e":"freckle","f":"tache de rousseur","k":"gen"}]},{"id":"v3","name":"L'océan et la mer","tag":"SEA","color":"#3d9bff","items":[{"e":"ocean","f":"océan","k":"noun"},{"e":"sea","f":"mer","k":"noun"},{"e":"wave","f":"vague","k":"noun"},{"e":"tide","f":"marée","k":"noun"},{"e":"high tide","f":"marée haute","k":"noun"},{"e":"low tide","f":"marée basse","k":"noun"},{"e":"current","f":"courant","k":"noun"},{"e":"rip current","f":"courant de baïne","k":"noun"},{"e":"shore","f":"rivage","k":"noun"},{"e":"beach","f":"plage","k":"noun"},{"e":"sand","f":"sable","k":"noun"},{"e":"coast","f":"côte","k":"noun"},{"e":"bay","f":"baie","k":"noun"},{"e":"reef","f":"récif","k":"noun"},{"e":"coral","f":"corail","k":"noun"},{"e":"island","f":"île","k":"noun"},{"e":"lagoon","f":"lagon","k":"noun"},{"e":"shell","f":"coquillage","k":"noun"},{"e":"seaweed","f":"algue","k":"noun"},{"e":"salt","f":"sel","k":"gen"},{"e":"foam","f":"écume","k":"noun"},{"e":"depth","f":"profondeur","k":"gen"},{"e":"surface","f":"surface","k":"noun"},{"e":"horizon","f":"horizon","k":"noun"},{"e":"cliff","f":"falaise","k":"noun"},{"e":"rock","f":"rocher","k":"noun"},{"e":"cave","f":"grotte","k":"noun"},{"e":"harbour","f":"port","k":"noun"},{"e":"boat","f":"bateau","k":"noun"},{"e":"ship","f":"navire","k":"noun"},{"e":"sail","f":"voile","k":"noun"},{"e":"anchor","f":"ancre","k":"noun"},{"e":"fisherman","f":"pêcheur","k":"noun"},{"e":"fish","f":"poisson","k":"noun"},{"e":"shark","f":"requin","k":"noun"},{"e":"dolphin","f":"dauphin","k":"noun"},{"e":"whale","f":"baleine","k":"noun"},{"e":"turtle","f":"tortue","k":"noun"},{"e":"ray","f":"raie","k":"noun"},{"e":"octopus","f":"pieuvre","k":"noun"},{"e":"jellyfish","f":"méduse","k":"noun"},{"e":"crab","f":"crabe","k":"noun"},{"e":"shrimp","f":"crevette","k":"noun"},{"e":"lobster","f":"homard","k":"noun"},{"e":"seagull","f":"mouette","k":"noun"},{"e":"eel","f":"anguille","k":"noun"},{"e":"sea urchin","f":"oursin","k":"noun"},{"e":"starfish","f":"étoile de mer","k":"noun"},{"e":"squid","f":"calamar","k":"noun"},{"e":"tuna","f":"thon","k":"noun"},{"e":"sea level","f":"niveau de la mer","k":"gen"},{"e":"pollution","f":"pollution","k":"gen"},{"e":"plastic","f":"plastique","k":"gen"},{"e":"diver","f":"plongeur","k":"noun"},{"e":"mask","f":"masque","k":"noun"},{"e":"fin","f":"palme, aileron","k":"noun"},{"e":"to float","f":"flotter","k":"verb"},{"e":"to sink","f":"couler","k":"verb"},{"e":"to drown","f":"se noyer","k":"verb"},{"e":"deep","f":"profond","k":"adj"},{"e":"shallow","f":"peu profond","k":"adj"},{"e":"salty","f":"salé","k":"adj"}]},{"id":"v4","name":"Le surf","tag":"SURF","color":"#ffd23f","items":[{"e":"surfer","f":"surfeur","k":"noun"},{"e":"surfboard","f":"planche de surf","k":"noun"},{"e":"longboard","f":"longboard","k":"noun"},{"e":"shortboard","f":"shortboard","k":"noun"},{"e":"bodyboard","f":"bodyboard","k":"noun"},{"e":"foil","f":"foil","k":"noun"},{"e":"paddleboard (SUP)","f":"stand-up paddle","k":"noun"},{"e":"windsurf","f":"planche à voile","k":"noun"},{"e":"kitesurf","f":"kitesurf","k":"noun"},{"e":"swell","f":"houle","k":"noun"},{"e":"set","f":"série de vagues","k":"noun"},{"e":"break","f":"endroit où la vague déferle","k":"noun"},{"e":"reef break","f":"vague de récif","k":"noun"},{"e":"beach break","f":"vague de plage","k":"noun"},{"e":"barrel (tube)","f":"tube","k":"noun"},{"e":"peak","f":"pic (de la vague)","k":"noun"},{"e":"lip","f":"lèvre (de la vague)","k":"noun"},{"e":"face","f":"face (de la vague)","k":"noun"},{"e":"shoulder","f":"épaule (de la vague)","k":"noun"},{"e":"whitewater","f":"écume, mousse","k":"noun"},{"e":"lineup","f":"zone d'attente","k":"noun"},{"e":"spot","f":"spot","k":"gen"},{"e":"leash","f":"leash","k":"noun"},{"e":"wax","f":"wax, paraffine","k":"noun"},{"e":"fin","f":"aileron","k":"noun"},{"e":"rail","f":"rail (bord de la planche)","k":"noun"},{"e":"nose","f":"pointe avant","k":"noun"},{"e":"tail","f":"arrière de la planche","k":"noun"},{"e":"deck","f":"dessus de la planche","k":"noun"},{"e":"wetsuit","f":"combinaison","k":"noun"},{"e":"rash guard","f":"lycra","k":"noun"},{"e":"board shorts","f":"boardshort","k":"noun"},{"e":"stance","f":"position","k":"gen"},{"e":"regular","f":"pied gauche devant"},{"e":"goofy","f":"pied droit devant"},{"e":"left","f":"gauche"},{"e":"right","f":"droite"},{"e":"glassy","f":"lisse, sans vent","k":"adj"},{"e":"choppy","f":"agité, clapoteux","k":"adj"},{"e":"offshore wind","f":"vent de terre","k":"noun"},{"e":"onshore wind","f":"vent de mer","k":"noun"},{"e":"forecast","f":"prévisions","k":"gen"},{"e":"beginner","f":"débutant","k":"gen"},{"e":"instructor","f":"moniteur","k":"gen"},{"e":"lesson","f":"cours","k":"gen"},{"e":"crowded","f":"bondé","k":"adj"},{"e":"to paddle","f":"ramer","k":"verb"},{"e":"to paddle out","f":"aller au large","k":"verb"},{"e":"to catch a wave","f":"prendre une vague","k":"verb"},{"e":"to take off","f":"se lever, partir","k":"verb"},{"e":"to pop up","f":"se redresser","k":"verb"},{"e":"to duck dive","f":"passer sous la vague","k":"verb"},{"e":"to turn","f":"tourner","k":"verb"},{"e":"to ride","f":"surfer, glisser","k":"verb"},{"e":"to drop in","f":"couper la priorité","k":"verb"},{"e":"to wipe out","f":"chuter, se vautrer","k":"verb"},{"e":"wipeout","f":"chute","k":"noun"},{"e":"bottom turn","f":"virage de bas de vague","k":"noun"},{"e":"cutback","f":"cutback","k":"noun"},{"e":"floater","f":"floater","k":"noun"},{"e":"aerial","f":"aérien","k":"noun"},{"e":"priority","f":"priorité","k":"noun"},{"e":"shore break","f":"vague qui casse sur le sable","k":"noun"},{"e":"close-out","f":"vague fermée","k":"noun"}]},{"id":"v5","name":"La maison","tag":"HOME","color":"#b07cff","items":[{"e":"house","f":"maison","k":"gen"},{"e":"home","f":"foyer, chez-soi","k":"gen"},{"e":"flat / apartment","f":"appartement","k":"noun"},{"e":"room","f":"pièce, chambre","k":"noun"},{"e":"kitchen","f":"cuisine","k":"noun"},{"e":"bedroom","f":"chambre","k":"noun"},{"e":"bathroom","f":"salle de bains","k":"noun"},{"e":"living room","f":"salon","k":"noun"},{"e":"dining room","f":"salle à manger","k":"noun"},{"e":"toilet","f":"toilettes","k":"noun"},{"e":"hall","f":"entrée, couloir","k":"noun"},{"e":"garage","f":"garage","k":"noun"},{"e":"garden","f":"jardin","k":"noun"},{"e":"roof","f":"toit","k":"noun"},{"e":"wall","f":"mur","k":"noun"},{"e":"floor","f":"sol, étage","k":"noun"},{"e":"ceiling","f":"plafond","k":"noun"},{"e":"door","f":"porte","k":"noun"},{"e":"window","f":"fenêtre","k":"noun"},{"e":"stairs","f":"escalier","k":"noun"},{"e":"balcony","f":"balcon","k":"noun"},{"e":"terrace","f":"terrasse","k":"noun"},{"e":"attic","f":"grenier","k":"noun"},{"e":"basement","f":"sous-sol","k":"noun"},{"e":"fence","f":"clôture","k":"noun"},{"e":"gate","f":"portail","k":"noun"},{"e":"key","f":"clé","k":"noun"},{"e":"lock","f":"serrure","k":"noun"},{"e":"bed","f":"lit","k":"noun"},{"e":"pillow","f":"oreiller","k":"noun"},{"e":"blanket","f":"couverture","k":"noun"},{"e":"sheet","f":"drap","k":"noun"},{"e":"mattress","f":"matelas","k":"noun"},{"e":"wardrobe","f":"armoire","k":"noun"},{"e":"cupboard","f":"placard","k":"noun"},{"e":"shelf","f":"étagère","k":"noun"},{"e":"drawer","f":"tiroir","k":"noun"},{"e":"desk","f":"bureau","k":"noun"},{"e":"chair","f":"chaise","k":"noun"},{"e":"table","f":"table","k":"noun"},{"e":"sofa","f":"canapé","k":"noun"},{"e":"armchair","f":"fauteuil","k":"noun"},{"e":"carpet","f":"tapis","k":"noun"},{"e":"curtain","f":"rideau","k":"noun"},{"e":"mirror","f":"miroir","k":"noun"},{"e":"lamp","f":"lampe","k":"noun"},{"e":"fridge","f":"frigo","k":"noun"},{"e":"oven","f":"four","k":"noun"},{"e":"microwave","f":"micro-ondes","k":"noun"},{"e":"dishwasher","f":"lave-vaisselle","k":"noun"},{"e":"washing machine","f":"machine à laver","k":"noun"},{"e":"sink","f":"évier, lavabo","k":"noun"},{"e":"tap","f":"robinet","k":"noun"},{"e":"shower","f":"douche","k":"noun"},{"e":"bath","f":"baignoire, bain","k":"noun"},{"e":"towel","f":"serviette","k":"noun"},{"e":"soap","f":"savon","k":"noun"},{"e":"toothbrush","f":"brosse à dents","k":"noun"},{"e":"toothpaste","f":"dentifrice","k":"noun"},{"e":"plate","f":"assiette","k":"noun"},{"e":"bowl","f":"bol","k":"noun"},{"e":"cup","f":"tasse","k":"noun"},{"e":"glass","f":"verre","k":"noun"},{"e":"fork","f":"fourchette","k":"noun"},{"e":"knife","f":"couteau","k":"noun"},{"e":"spoon","f":"cuillère","k":"noun"},{"e":"pan","f":"poêle","k":"noun"},{"e":"saucepan","f":"casserole","k":"noun"},{"e":"bin","f":"poubelle","k":"noun"},{"e":"broom","f":"balai","k":"noun"},{"e":"vacuum cleaner","f":"aspirateur","k":"noun"},{"e":"electricity","f":"électricité","k":"gen"},{"e":"fan","f":"ventilateur","k":"noun"},{"e":"air conditioning","f":"climatisation","k":"gen"},{"e":"television","f":"télévision","k":"gen"},{"e":"remote control","f":"télécommande","k":"gen"},{"e":"furniture","f":"meubles","k":"gen"},{"e":"neighbour","f":"voisin","k":"gen"}]},{"id":"v6","name":"Le sport","tag":"SPORT","color":"#35e08f","items":[{"e":"sport","f":"sport","k":"gen"},{"e":"football (soccer)","f":"football","k":"sportname"},{"e":"basketball","f":"basket-ball","k":"sportname"},{"e":"volleyball","f":"volley-ball","k":"sportname"},{"e":"handball","f":"handball","k":"sportname"},{"e":"rugby","f":"rugby","k":"sportname"},{"e":"tennis","f":"tennis","k":"sportname"},{"e":"badminton","f":"badminton","k":"sportname"},{"e":"table tennis","f":"tennis de table","k":"sportname"},{"e":"swimming","f":"natation","k":"sportname"},{"e":"athletics","f":"athlétisme","k":"sportname"},{"e":"running","f":"course à pied","k":"sportname"},{"e":"cycling","f":"cyclisme","k":"sportname"},{"e":"gymnastics","f":"gymnastique","k":"sportname"},{"e":"judo","f":"judo","k":"sportname"},{"e":"boxing","f":"boxe","k":"sportname"},{"e":"golf","f":"golf","k":"sportname"},{"e":"sailing","f":"voile","k":"sportname"},{"e":"rowing","f":"aviron","k":"sportname"},{"e":"canoeing","f":"canoë","k":"sportname"},{"e":"outrigger canoe","f":"pirogue à balancier (va'a)","k":"sportname"},{"e":"diving","f":"plongée","k":"sportname"},{"e":"skateboarding","f":"skateboard","k":"sportname"},{"e":"climbing","f":"escalade","k":"sportname"},{"e":"hiking","f":"randonnée","k":"sportname"},{"e":"triathlon","f":"triathlon","k":"sportname"},{"e":"dancing","f":"danse","k":"sportname"},{"e":"player","f":"joueur","k":"noun"},{"e":"coach","f":"entraîneur","k":"noun"},{"e":"referee","f":"arbitre","k":"noun"},{"e":"match","f":"match","k":"noun"},{"e":"score","f":"score","k":"noun"},{"e":"goal","f":"but","k":"noun"},{"e":"point","f":"point","k":"noun"},{"e":"to win","f":"gagner","k":"verb"},{"e":"to lose","f":"perdre","k":"verb"},{"e":"draw","f":"match nul","k":"noun"},{"e":"champion","f":"champion","k":"noun"},{"e":"competition","f":"compétition","k":"gen"},{"e":"tournament","f":"tournoi","k":"gen"},{"e":"race","f":"course","k":"noun"},{"e":"final","f":"finale","k":"noun"},{"e":"medal","f":"médaille","k":"noun"},{"e":"record","f":"record","k":"noun"},{"e":"training","f":"entraînement","k":"gen"},{"e":"warm-up","f":"échauffement","k":"gen"},{"e":"stadium","f":"stade","k":"noun"},{"e":"pitch","f":"terrain (foot, rugby)","k":"noun"},{"e":"court","f":"court, terrain","k":"noun"},{"e":"field","f":"champ, terrain","k":"noun"},{"e":"track","f":"piste","k":"noun"},{"e":"pool","f":"piscine","k":"noun"},{"e":"gym","f":"salle de sport","k":"noun"},{"e":"ball","f":"ballon, balle","k":"noun"},{"e":"net","f":"filet","k":"noun"},{"e":"racket","f":"raquette","k":"noun"},{"e":"bat","f":"batte","k":"noun"},{"e":"helmet","f":"casque","k":"noun"},{"e":"goggles","f":"lunettes (de natation)","k":"noun"},{"e":"trainers","f":"baskets","k":"noun"},{"e":"whistle","f":"sifflet","k":"noun"},{"e":"supporter / fan","f":"supporter","k":"noun"},{"e":"fair play","f":"esprit sportif","k":"gen"},{"e":"injury","f":"blessure","k":"gen"},{"e":"cramp","f":"crampe","k":"gen"},{"e":"stamina","f":"endurance","k":"gen"},{"e":"strength","f":"force","k":"gen"},{"e":"speed","f":"vitesse","k":"gen"},{"e":"fit","f":"en forme","k":"human"},{"e":"healthy","f":"en bonne santé","k":"human"},{"e":"to practise","f":"pratiquer, s'entraîner","k":"verb"},{"e":"to compete","f":"participer à une compétition","k":"verb"},{"e":"to score","f":"marquer","k":"verb"},{"e":"to pass","f":"passer","k":"verb"},{"e":"to shoot","f":"tirer","k":"verb"},{"e":"to defend","f":"défendre","k":"verb"},{"e":"to attack","f":"attaquer","k":"verb"},{"e":"to throw","f":"lancer","k":"verb"},{"e":"to catch","f":"attraper","k":"verb"},{"e":"to kick","f":"donner un coup de pied","k":"verb"}]},{"id":"v7","name":"Verbes irréguliers","tag":"IRR","color":"#ff6fae","items":[{"e":"be","f":"être","p":["was / were","been"],"k":"verbx"},{"e":"have","f":"avoir","p":["had","had"],"k":"verbx"},{"e":"do","f":"faire","p":["did","done"],"k":"verbx"},{"e":"go","f":"aller","p":["went","gone / been"],"k":"verb"},{"e":"come","f":"venir","p":["came","come"],"k":"verb"},{"e":"see","f":"voir","p":["saw","seen"],"k":"verb"},{"e":"take","f":"prendre","p":["took","taken"],"k":"verb"},{"e":"make","f":"fabriquer, faire","p":["made","made"],"k":"verb"},{"e":"get","f":"obtenir, devenir","p":["got","got"],"k":"verbx"},{"e":"give","f":"donner","p":["gave","given"],"k":"verb"},{"e":"know","f":"savoir, connaître","p":["knew","known"],"k":"verb"},{"e":"think","f":"penser","p":["thought","thought"],"k":"verb"},{"e":"say","f":"dire","p":["said","said"],"k":"verb"},{"e":"tell","f":"raconter","p":["told","told"],"k":"verb"},{"e":"find","f":"trouver","p":["found","found"],"k":"verb"},{"e":"buy","f":"acheter","p":["bought","bought"],"k":"verb"},{"e":"bring","f":"apporter","p":["brought","brought"],"k":"verb"},{"e":"eat","f":"manger","p":["ate","eaten"],"k":"verb"},{"e":"drink","f":"boire","p":["drank","drunk"],"k":"verb"},{"e":"sleep","f":"dormir","p":["slept","slept"],"k":"verb"},{"e":"write","f":"écrire","p":["wrote","written"],"k":"verb"},{"e":"read","f":"lire","p":["read","read"],"k":"verb"},{"e":"speak","f":"parler","p":["spoke","spoken"],"k":"verb"},{"e":"run","f":"courir","p":["ran","run"],"k":"verb"},{"e":"swim","f":"nager","p":["swam","swum"],"k":"verb"},{"e":"sit","f":"s'asseoir","p":["sat","sat"],"k":"verb"},{"e":"stand","f":"être debout","p":["stood","stood"],"k":"verb"},{"e":"begin","f":"commencer","p":["began","begun"],"k":"verb"},{"e":"become","f":"devenir","p":["became","become"],"k":"verb"},{"e":"break","f":"casser","p":["broke","broken"],"k":"verb"},{"e":"build","f":"construire","p":["built","built"],"k":"verb"},{"e":"catch","f":"attraper","p":["caught","caught"],"k":"verb"},{"e":"choose","f":"choisir","p":["chose","chosen"],"k":"verb"},{"e":"cost","f":"coûter","p":["cost","cost"],"k":"verbx"},{"e":"cut","f":"couper","p":["cut","cut"],"k":"verb"},{"e":"draw","f":"dessiner","p":["drew","drawn"],"k":"verb"},{"e":"drive","f":"conduire","p":["drove","driven"],"k":"verb"},{"e":"fall","f":"tomber","p":["fell","fallen"],"k":"verbx"},{"e":"feed","f":"nourrir","p":["fed","fed"],"k":"verbx"},{"e":"feel","f":"ressentir","p":["felt","felt"],"k":"verb"},{"e":"fight","f":"se battre","p":["fought","fought"],"k":"verb"},{"e":"fly","f":"voler (avion)","p":["flew","flown"],"k":"verb"},{"e":"forget","f":"oublier","p":["forgot","forgotten"],"k":"verb"},{"e":"grow","f":"grandir, cultiver","p":["grew","grown"],"k":"verb"},{"e":"hang","f":"accrocher","p":["hung","hung"],"k":"verbx"},{"e":"hear","f":"entendre","p":["heard","heard"],"k":"verb"},{"e":"hide","f":"(se) cacher","p":["hid","hidden"],"k":"verb"},{"e":"hit","f":"frapper","p":["hit","hit"],"k":"verbx"},{"e":"hold","f":"tenir","p":["held","held"],"k":"verbx"},{"e":"keep","f":"garder","p":["kept","kept"],"k":"verbx"},{"e":"lay","f":"poser","p":["laid","laid"],"k":"verbx"},{"e":"lead","f":"mener","p":["led","led"],"k":"verbx"},{"e":"learn","f":"apprendre","p":["learnt / learned","learnt / learned"],"k":"verb"},{"e":"leave","f":"partir, quitter","p":["left","left"],"k":"verb"},{"e":"lend","f":"prêter","p":["lent","lent"],"k":"verb"},{"e":"let","f":"laisser","p":["let","let"],"k":"verbx"},{"e":"lie","f":"être allongé","p":["lay","lain"],"k":"verbx"},{"e":"lose","f":"perdre","p":["lost","lost"],"k":"verb"},{"e":"mean","f":"signifier","p":["meant","meant"],"k":"verbx"},{"e":"meet","f":"rencontrer","p":["met","met"],"k":"verb"},{"e":"pay","f":"payer","p":["paid","paid"],"k":"verb"},{"e":"put","f":"mettre","p":["put","put"],"k":"verbx"},{"e":"ride","f":"monter (vélo, cheval)","p":["rode","ridden"],"k":"verb"},{"e":"ring","f":"sonner","p":["rang","rung"],"k":"verbx"},{"e":"rise","f":"se lever (soleil)","p":["rose","risen"],"k":"verbx"},{"e":"sell","f":"vendre","p":["sold","sold"],"k":"verb"},{"e":"send","f":"envoyer","p":["sent","sent"],"k":"verb"},{"e":"set","f":"fixer, installer","p":["set","set"],"k":"verbx"},{"e":"shake","f":"secouer","p":["shook","shaken"],"k":"verbx"},{"e":"shine","f":"briller","p":["shone","shone"],"k":"verbx"},{"e":"shoot","f":"tirer","p":["shot","shot"],"k":"verbx"},{"e":"show","f":"montrer","p":["showed","shown"],"k":"verbx"},{"e":"shut","f":"fermer","p":["shut","shut"],"k":"verb"},{"e":"sing","f":"chanter","p":["sang","sung"],"k":"verb"},{"e":"sink","f":"couler","p":["sank","sunk"],"k":"verb"},{"e":"spend","f":"dépenser, passer (temps)","p":["spent","spent"],"k":"verb"},{"e":"steal","f":"voler (dérober)","p":["stole","stolen"],"k":"verbx"},{"e":"teach","f":"enseigner","p":["taught","taught"],"k":"verb"},{"e":"tear","f":"déchirer","p":["tore","torn"],"k":"verbx"},{"e":"throw","f":"lancer","p":["threw","thrown"],"k":"verb"},{"e":"understand","f":"comprendre","p":["understood","understood"],"k":"verb"},{"e":"wake up","f":"se réveiller","p":["woke up","woken up"],"k":"verb"},{"e":"wear","f":"porter (vêtement)","p":["wore","worn"],"k":"verb"},{"e":"win","f":"gagner","p":["won","won"],"k":"verb"}]},{"id":"v7b","name":"Verbes réguliers et modaux","tag":"VERB","color":"#ff9f43","items":[{"e":"work","f":"travailler","k":"verb"},{"e":"play","f":"jouer","k":"verb"},{"e":"talk","f":"parler, discuter","k":"verb"},{"e":"walk","f":"marcher","k":"verb"},{"e":"want","f":"vouloir","k":"verb"},{"e":"need","f":"avoir besoin de","k":"verb"},{"e":"like","f":"aimer","k":"verb"},{"e":"love","f":"adorer, aimer","k":"verb"},{"e":"live","f":"vivre, habiter","k":"verb"},{"e":"look","f":"regarder","k":"verb"},{"e":"listen","f":"écouter","k":"verb"},{"e":"watch","f":"regarder (un écran)","k":"verb"},{"e":"help","f":"aider","k":"verb"},{"e":"ask","f":"demander","k":"verb"},{"e":"answer","f":"répondre","k":"verb"},{"e":"call","f":"appeler","k":"verb"},{"e":"try","f":"essayer","k":"verb"},{"e":"use","f":"utiliser","k":"verb"},{"e":"start","f":"commencer","k":"verb"},{"e":"stop","f":"arrêter","k":"verb"},{"e":"open","f":"ouvrir","k":"verb"},{"e":"close","f":"fermer","k":"verb"},{"e":"wait","f":"attendre","k":"verb"},{"e":"study","f":"étudier","k":"verb"},{"e":"visit","f":"visiter","k":"verb"},{"e":"travel","f":"voyager","k":"verb"},{"e":"decide","f":"décider","k":"verb"},{"e":"change","f":"changer","k":"verb"},{"e":"move","f":"bouger, déménager","k":"verb"},{"e":"turn","f":"tourner","k":"verb"},{"e":"follow","f":"suivre","k":"verb"},{"e":"happen","f":"arriver (se produire)","k":"verbx"},{"e":"stay","f":"rester","k":"verb"},{"e":"finish","f":"finir","k":"verb"},{"e":"remember","f":"se souvenir","k":"verb"},{"e":"hope","f":"espérer","k":"verb"},{"e":"believe","f":"croire","k":"verb"},{"e":"enjoy","f":"apprécier","k":"verb"},{"e":"invite","f":"inviter","k":"verb"},{"e":"improve","f":"s'améliorer","k":"verb"},{"e":"practise","f":"s'entraîner","k":"verb"},{"e":"train","f":"s'entraîner, former","k":"verb"},{"e":"jump","f":"sauter","k":"verb"},{"e":"climb","f":"grimper","k":"verb"},{"e":"dance","f":"danser","k":"verb"},{"e":"cook","f":"cuisiner","k":"verb"},{"e":"clean","f":"nettoyer","k":"verb"},{"e":"wash","f":"laver","k":"verb"},{"e":"paint","f":"peindre","k":"verb"},{"e":"plan","f":"planifier","k":"verb"},{"e":"share","f":"partager","k":"verb"},{"e":"agree","f":"être d'accord","k":"verb"},{"e":"allow","f":"permettre","k":"verb"},{"e":"arrive","f":"arriver","k":"verb"},{"e":"carry","f":"porter","k":"verb"},{"e":"check","f":"vérifier","k":"verb"},{"e":"collect","f":"collectionner","k":"verb"},{"e":"compare","f":"comparer","k":"verb"},{"e":"continue","f":"continuer","k":"verb"},{"e":"create","f":"créer","k":"verb"},{"e":"discover","f":"découvrir","k":"verb"},{"e":"explain","f":"expliquer","k":"verb"},{"e":"fix","f":"réparer","k":"verb"},{"e":"join","f":"rejoindre","k":"verb"},{"e":"laugh","f":"rire","k":"verb"},{"e":"lift","f":"soulever","k":"verb"},{"e":"miss","f":"manquer, rater","k":"verbx"},{"e":"notice","f":"remarquer","k":"verb"},{"e":"offer","f":"proposer","k":"verb"},{"e":"order","f":"commander","k":"verb"},{"e":"organise","f":"organiser","k":"verb"},{"e":"prefer","f":"préférer","k":"verb"},{"e":"protect","f":"protéger","k":"verb"},{"e":"push","f":"pousser","k":"verb"},{"e":"pull","f":"tirer","k":"verb"},{"e":"receive","f":"recevoir","k":"verb"},{"e":"repeat","f":"répéter","k":"verb"},{"e":"rest","f":"se reposer","k":"verb"},{"e":"return","f":"revenir, rendre","k":"verb"},{"e":"save","f":"sauver, économiser","k":"verb"},{"e":"smile","f":"sourire","k":"verb"},{"e":"suggest","f":"suggérer","k":"verb"},{"e":"surf","f":"surfer","k":"verb"},{"e":"thank","f":"remercier","k":"verb"},{"e":"touch","f":"toucher","k":"verb"},{"e":"wish","f":"souhaiter","k":"verb"},{"e":"worry","f":"s'inquiéter","k":"verb"},{"e":"cry","f":"pleurer","k":"verb"},{"e":"enter","f":"entrer","k":"verb"},{"e":"kill","f":"tuer","k":"verbx"},{"e":"need to / have to","f":"devoir"},{"e":"can / could","f":"pouvoir"},{"e":"must","f":"devoir (obligation)"},{"e":"should","f":"devrait"}]},{"id":"v8a","name":"Mots de liaison","tag":"LINK","color":"#4dd0e1","items":[{"e":"and","f":"et"},{"e":"but","f":"mais"},{"e":"or","f":"ou"},{"e":"so","f":"donc, alors"},{"e":"because","f":"parce que"},{"e":"since","f":"puisque, depuis"},{"e":"as","f":"comme, car"},{"e":"although / though","f":"bien que"},{"e":"even though","f":"même si"},{"e":"however","f":"cependant"},{"e":"therefore","f":"par conséquent"},{"e":"moreover / furthermore","f":"de plus"},{"e":"besides","f":"d'ailleurs"},{"e":"also / too","f":"aussi"},{"e":"either … or","f":"soit … soit"},{"e":"neither … nor","f":"ni … ni"},{"e":"both … and","f":"à la fois … et"},{"e":"while / whereas","f":"pendant que, alors que"},{"e":"if","f":"si"},{"e":"unless","f":"à moins que"},{"e":"until","f":"jusqu'à ce que"},{"e":"before","f":"avant"},{"e":"after","f":"après"},{"e":"when","f":"quand"},{"e":"as soon as","f":"dès que"},{"e":"then","f":"puis, ensuite"},{"e":"first / firstly","f":"d'abord"},{"e":"secondly","f":"deuxièmement"},{"e":"next","f":"ensuite"},{"e":"afterwards","f":"après coup"},{"e":"finally","f":"enfin"},{"e":"at last","f":"enfin (après attente)"},{"e":"meanwhile","f":"pendant ce temps"},{"e":"in conclusion","f":"pour conclure"},{"e":"to sum up","f":"en résumé"},{"e":"in fact","f":"en fait"},{"e":"indeed","f":"en effet"},{"e":"actually","f":"en réalité"},{"e":"for example / for instance","f":"par exemple"},{"e":"such as","f":"tel que"},{"e":"that is to say","f":"c'est-à-dire"},{"e":"on the other hand","f":"d'un autre côté"},{"e":"in addition","f":"en outre"},{"e":"despite / in spite of","f":"malgré"},{"e":"instead of","f":"au lieu de"},{"e":"according to","f":"selon"},{"e":"thanks to","f":"grâce à"},{"e":"because of / due to","f":"à cause de"},{"e":"in order to","f":"afin de"},{"e":"so that","f":"pour que"},{"e":"as well as","f":"ainsi que"},{"e":"nevertheless","f":"néanmoins"},{"e":"otherwise","f":"sinon"},{"e":"anyway","f":"de toute façon"},{"e":"of course","f":"bien sûr"},{"e":"maybe / perhaps","f":"peut-être"}]},{"id":"v8b","name":"Prépositions","tag":"PREP","color":"#9ccc65","items":[{"e":"in","f":"dans, en"},{"e":"on","f":"sur"},{"e":"at","f":"à (lieu, heure)"},{"e":"to","f":"à, vers"},{"e":"from","f":"de (provenance)"},{"e":"with","f":"avec"},{"e":"without","f":"sans"},{"e":"by","f":"par, près de"},{"e":"for","f":"pour, pendant"},{"e":"of","f":"de"},{"e":"about","f":"à propos de, environ"},{"e":"under","f":"sous"},{"e":"over","f":"au-dessus de"},{"e":"above","f":"au-dessus"},{"e":"below","f":"en dessous"},{"e":"between","f":"entre (deux)"},{"e":"among","f":"parmi"},{"e":"behind","f":"derrière"},{"e":"in front of","f":"devant"},{"e":"next to","f":"à côté de"},{"e":"near","f":"près de"},{"e":"across","f":"à travers"},{"e":"through","f":"à travers"},{"e":"along","f":"le long de"},{"e":"around","f":"autour de"},{"e":"into","f":"dans (mouvement)"},{"e":"out of","f":"hors de"},{"e":"towards","f":"vers"},{"e":"against","f":"contre"},{"e":"during","f":"pendant"},{"e":"inside","f":"à l'intérieur"},{"e":"outside","f":"à l'extérieur"},{"e":"opposite","f":"en face de"},{"e":"beside","f":"à côté"},{"e":"past","f":"devant, au-delà de"},{"e":"up","f":"en haut"},{"e":"down","f":"en bas"},{"e":"off","f":"éloigné, éteint"},{"e":"since","f":"depuis (date)"},{"e":"ago","f":"il y a"},{"e":"within","f":"dans un délai de"},{"e":"beyond","f":"au-delà de"}]},{"id":"v8c","name":"Pronoms, questions, quantité","tag":"WHO","color":"#f78fb3","items":[{"e":"I","f":"je"},{"e":"you","f":"tu, vous"},{"e":"he","f":"il"},{"e":"she","f":"elle"},{"e":"it","f":"il, elle, ça"},{"e":"we","f":"nous"},{"e":"they","f":"ils, elles"},{"e":"me","f":"moi, me"},{"e":"him","f":"lui, le"},{"e":"her","f":"elle, lui, son"},{"e":"us","f":"nous"},{"e":"them","f":"eux, les"},{"e":"my","f":"mon, ma, mes"},{"e":"your","f":"ton, votre"},{"e":"his","f":"son (à lui)"},{"e":"its","f":"son (chose)"},{"e":"our","f":"notre"},{"e":"their","f":"leur"},{"e":"this","f":"ceci, ce"},{"e":"that","f":"cela, ce"},{"e":"these","f":"ces (proches)"},{"e":"those","f":"ces (loin)"},{"e":"who","f":"qui"},{"e":"what","f":"quoi, que"},{"e":"where","f":"où"},{"e":"when","f":"quand"},{"e":"why","f":"pourquoi"},{"e":"how","f":"comment"},{"e":"which","f":"lequel, quel"},{"e":"whose","f":"à qui"},{"e":"how many","f":"combien (dénombrable)"},{"e":"how much","f":"combien (indénombrable)"},{"e":"some","f":"quelques"},{"e":"any","f":"aucun, du, des"},{"e":"many","f":"beaucoup (dénombrable)"},{"e":"much","f":"beaucoup (indénombrable)"},{"e":"a lot of","f":"beaucoup de"},{"e":"few","f":"peu de, quelques"},{"e":"little","f":"peu de"},{"e":"all","f":"tout"},{"e":"every","f":"chaque"},{"e":"each","f":"chaque, chacun"},{"e":"no","f":"aucun, non"},{"e":"none","f":"aucun"},{"e":"another","f":"un autre"},{"e":"other","f":"autre"},{"e":"something","f":"quelque chose"},{"e":"nothing","f":"rien"},{"e":"someone","f":"quelqu'un"},{"e":"nobody","f":"personne"},{"e":"everything","f":"tout"},{"e":"everybody","f":"tout le monde"}]},{"id":"v9","name":"Famille et personnes","tag":"FAM","color":"#5ea8ff","items":[{"e":"family","f":"famille","k":"noun"},{"e":"parents","f":"parents","k":"noun"},{"e":"mother / mum","f":"mère / maman","k":"noun"},{"e":"father / dad","f":"père / papa","k":"noun"},{"e":"brother","f":"frère","k":"noun"},{"e":"sister","f":"sœur","k":"noun"},{"e":"son","f":"fils","k":"noun"},{"e":"daughter","f":"fille (lien familial)","k":"noun"},{"e":"grandmother","f":"grand-mère","k":"noun"},{"e":"grandfather","f":"grand-père","k":"noun"},{"e":"grandparents","f":"grands-parents","k":"noun"},{"e":"aunt","f":"tante","k":"noun"},{"e":"uncle","f":"oncle","k":"noun"},{"e":"cousin","f":"cousin(e)","k":"noun"},{"e":"husband","f":"mari","k":"noun"},{"e":"wife","f":"épouse","k":"noun"},{"e":"partner","f":"partenaire, conjoint","k":"noun"},{"e":"boyfriend","f":"petit ami","k":"noun"},{"e":"girlfriend","f":"petite amie","k":"noun"},{"e":"twin","f":"jumeau","k":"noun"},{"e":"baby","f":"bébé","k":"noun"},{"e":"teenager","f":"adolescent","k":"noun"},{"e":"adult","f":"adulte","k":"noun"},{"e":"neighbour","f":"voisin","k":"noun"},{"e":"classmate","f":"camarade de classe","k":"noun"},{"e":"teacher","f":"professeur","k":"noun"},{"e":"headteacher","f":"directeur, principal","k":"noun"},{"e":"colleague","f":"collègue","k":"noun"},{"e":"boss","f":"chef, patron","k":"noun"},{"e":"doctor","f":"médecin","k":"noun"},{"e":"nurse","f":"infirmier(ère)","k":"noun"},{"e":"police officer","f":"policier","k":"noun"},{"e":"firefighter","f":"pompier","k":"noun"},{"e":"farmer","f":"agriculteur","k":"noun"},{"e":"engineer","f":"ingénieur","k":"noun"},{"e":"lawyer","f":"avocat","k":"noun"}]},{"id":"v10","name":"Nourriture et boissons","tag":"FOOD","color":"#ffb142","items":[{"e":"food","f":"nourriture","k":"gen"},{"e":"meal","f":"repas","k":"gen"},{"e":"breakfast","f":"petit-déjeuner","k":"noun"},{"e":"lunch","f":"déjeuner","k":"noun"},{"e":"dinner","f":"dîner","k":"noun"},{"e":"snack","f":"en-cas","k":"noun"},{"e":"bread","f":"pain","k":"noun"},{"e":"butter","f":"beurre","k":"noun"},{"e":"cheese","f":"fromage","k":"noun"},{"e":"egg","f":"œuf","k":"noun"},{"e":"milk","f":"lait","k":"noun"},{"e":"rice","f":"riz","k":"noun"},{"e":"pasta","f":"pâtes","k":"noun"},{"e":"soup","f":"soupe","k":"noun"},{"e":"salad","f":"salade","k":"noun"},{"e":"sandwich","f":"sandwich","k":"noun"},{"e":"meat","f":"viande","k":"noun"},{"e":"chicken","f":"poulet","k":"noun"},{"e":"beef","f":"bœuf","k":"noun"},{"e":"pork","f":"porc","k":"noun"},{"e":"fish","f":"poisson","k":"noun"},{"e":"sausage","f":"saucisse","k":"noun"},{"e":"vegetable","f":"légume","k":"noun"},{"e":"fruit","f":"fruit","k":"noun"},{"e":"apple","f":"pomme","k":"noun"},{"e":"banana","f":"banane","k":"noun"},{"e":"orange","f":"orange","k":"noun"},{"e":"lemon","f":"citron","k":"noun"},{"e":"pineapple","f":"ananas","k":"noun"},{"e":"coconut","f":"noix de coco","k":"noun"},{"e":"mango","f":"mangue","k":"noun"},{"e":"strawberry","f":"fraise","k":"noun"},{"e":"tomato","f":"tomate","k":"noun"},{"e":"potato","f":"pomme de terre","k":"noun"},{"e":"carrot","f":"carotte","k":"noun"},{"e":"onion","f":"oignon","k":"noun"},{"e":"garlic","f":"ail","k":"noun"},{"e":"mushroom","f":"champignon","k":"noun"},{"e":"bean","f":"haricot","k":"noun"},{"e":"pepper","f":"poivre, poivron","k":"noun"},{"e":"sugar","f":"sucre","k":"noun"},{"e":"salt","f":"sel","k":"noun"},{"e":"oil","f":"huile","k":"noun"},{"e":"sauce","f":"sauce","k":"noun"},{"e":"cake","f":"gâteau","k":"noun"},{"e":"biscuit / cookie","f":"biscuit","k":"noun"},{"e":"chocolate","f":"chocolat","k":"noun"},{"e":"ice cream","f":"glace","k":"noun"},{"e":"honey","f":"miel","k":"noun"},{"e":"jam","f":"confiture","k":"noun"},{"e":"juice","f":"jus","k":"noun"},{"e":"tea","f":"thé","k":"noun"},{"e":"coffee","f":"café","k":"noun"},{"e":"soft drink","f":"boisson gazeuse","k":"noun"},{"e":"tap water","f":"eau du robinet","k":"gen"},{"e":"bottle","f":"bouteille","k":"noun"},{"e":"hungry","f":"affamé","k":"hungry"},{"e":"thirsty","f":"assoiffé","k":"hungry"},{"e":"delicious","f":"délicieux","k":"taste"},{"e":"tasty","f":"savoureux","k":"taste"},{"e":"sweet","f":"sucré","k":"taste"},{"e":"sour","f":"acide","k":"taste"},{"e":"spicy","f":"épicé","k":"taste"},{"e":"bitter","f":"amer","k":"taste"},{"e":"raw","f":"cru","k":"taste"},{"e":"fresh","f":"frais","k":"taste"},{"e":"to taste","f":"goûter","k":"verb"},{"e":"to bake","f":"cuire au four","k":"verb"}]},{"id":"v11","name":"L'école et les études","tag":"SCHL","color":"#7bed9f","items":[{"e":"school","f":"école","k":"gen"},{"e":"class / classroom","f":"classe, salle de classe","k":"gen"},{"e":"lesson","f":"leçon, cours","k":"noun"},{"e":"subject","f":"matière","k":"noun"},{"e":"homework","f":"devoirs","k":"noun"},{"e":"exam","f":"examen","k":"noun"},{"e":"test","f":"contrôle","k":"noun"},{"e":"mark / grade","f":"note","k":"noun"},{"e":"report","f":"bulletin","k":"noun"},{"e":"timetable","f":"emploi du temps","k":"noun"},{"e":"break","f":"pause, récréation","k":"gen"},{"e":"canteen","f":"cantine","k":"gen"},{"e":"playground","f":"cour de récréation","k":"gen"},{"e":"library","f":"bibliothèque","k":"gen"},{"e":"notebook","f":"cahier","k":"noun"},{"e":"pen","f":"stylo","k":"noun"},{"e":"pencil","f":"crayon","k":"noun"},{"e":"rubber / eraser","f":"gomme","k":"noun"},{"e":"ruler","f":"règle","k":"noun"},{"e":"schoolbag","f":"cartable","k":"noun"},{"e":"dictionary","f":"dictionnaire","k":"noun"},{"e":"calculator","f":"calculatrice","k":"noun"},{"e":"maths","f":"mathématiques","k":"subject"},{"e":"science","f":"sciences","k":"subject"},{"e":"history","f":"histoire","k":"subject"},{"e":"geography","f":"géographie","k":"subject"},{"e":"French","f":"français (langue)","k":"subject"},{"e":"English","f":"anglais (langue)","k":"subject"},{"e":"art","f":"arts plastiques","k":"subject"},{"e":"PE","f":"EPS","k":"subject"},{"e":"exercise","f":"exercice","k":"noun"},{"e":"sentence","f":"phrase","k":"noun"},{"e":"essay","f":"rédaction","k":"noun"},{"e":"oral","f":"oral","k":"gen"},{"e":"grammar","f":"grammaire","k":"noun"},{"e":"spelling","f":"orthographe","k":"noun"},{"e":"pupil / student","f":"élève","k":"gen"},{"e":"to revise","f":"réviser","k":"verb"},{"e":"to pass","f":"réussir","k":"verb"},{"e":"to fail","f":"échouer","k":"verb"},{"e":"to cheat","f":"tricher","k":"verb"},{"e":"to copy","f":"copier","k":"verb"},{"e":"diploma","f":"diplôme","k":"noun"},{"e":"university","f":"université","k":"gen"},{"e":"career","f":"carrière","k":"gen"},{"e":"future job","f":"futur métier","k":"gen"}]},{"id":"v12","name":"Vêtements","tag":"WEAR","color":"#ff7f7f","items":[{"e":"clothes","f":"vêtements","k":"gen"},{"e":"T-shirt","f":"tee-shirt","k":"noun"},{"e":"shirt","f":"chemise","k":"noun"},{"e":"jumper / sweater","f":"pull","k":"noun"},{"e":"hoodie","f":"sweat à capuche","k":"noun"},{"e":"jacket","f":"veste","k":"noun"},{"e":"coat","f":"manteau","k":"noun"},{"e":"raincoat","f":"imperméable","k":"noun"},{"e":"trousers / pants","f":"pantalon","k":"noun"},{"e":"jeans","f":"jean","k":"noun"},{"e":"shorts","f":"short","k":"noun"},{"e":"skirt","f":"jupe","k":"noun"},{"e":"dress","f":"robe","k":"noun"},{"e":"swimsuit","f":"maillot de bain","k":"noun"},{"e":"underwear","f":"sous-vêtements","k":"noun"},{"e":"socks","f":"chaussettes","k":"noun"},{"e":"shoes","f":"chaussures","k":"noun"},{"e":"sandals","f":"sandales","k":"noun"},{"e":"flip-flops","f":"tongs","k":"noun"},{"e":"boots","f":"bottes","k":"noun"},{"e":"hat","f":"chapeau","k":"noun"},{"e":"cap","f":"casquette","k":"noun"},{"e":"scarf","f":"écharpe","k":"noun"},{"e":"gloves","f":"gants","k":"noun"},{"e":"belt","f":"ceinture","k":"noun"},{"e":"pocket","f":"poche","k":"noun"},{"e":"sunglasses","f":"lunettes de soleil","k":"noun"},{"e":"watch","f":"montre","k":"noun"},{"e":"bag","f":"sac","k":"noun"},{"e":"backpack","f":"sac à dos","k":"noun"},{"e":"uniform","f":"uniforme","k":"noun"},{"e":"to try on","f":"essayer","k":"verb"}]},{"id":"v13","name":"Temps, dates, nombres","tag":"TIME","color":"#70a1ff","items":[{"e":"Monday","f":"lundi","k":"day"},{"e":"Tuesday","f":"mardi","k":"day"},{"e":"Wednesday","f":"mercredi","k":"day"},{"e":"Thursday","f":"jeudi","k":"day"},{"e":"Friday","f":"vendredi","k":"day"},{"e":"Saturday","f":"samedi","k":"day"},{"e":"Sunday","f":"dimanche","k":"day"},{"e":"January","f":"janvier","k":"month"},{"e":"February","f":"février","k":"month"},{"e":"March","f":"mars","k":"month"},{"e":"April","f":"avril","k":"month"},{"e":"May","f":"mai","k":"month"},{"e":"June","f":"juin","k":"month"},{"e":"July","f":"juillet","k":"month"},{"e":"August","f":"août","k":"month"},{"e":"September","f":"septembre","k":"month"},{"e":"October","f":"octobre","k":"month"},{"e":"November","f":"novembre","k":"month"},{"e":"December","f":"décembre","k":"month"},{"e":"spring","f":"printemps","k":"season"},{"e":"summer","f":"été","k":"season"},{"e":"autumn","f":"automne","k":"season"},{"e":"winter","f":"hiver","k":"season"},{"e":"season","f":"saison"},{"e":"today","f":"aujourd'hui"},{"e":"yesterday","f":"hier"},{"e":"tomorrow","f":"demain"},{"e":"morning","f":"matin"},{"e":"afternoon","f":"après-midi"},{"e":"evening","f":"soir"},{"e":"noon","f":"midi"},{"e":"midnight","f":"minuit"},{"e":"early","f":"tôt"},{"e":"late","f":"tard"},{"e":"now","f":"maintenant"},{"e":"soon","f":"bientôt"},{"e":"already","f":"déjà"},{"e":"yet","f":"encore, déjà"},{"e":"still","f":"toujours, encore"},{"e":"again","f":"encore, de nouveau"},{"e":"always","f":"toujours"},{"e":"never","f":"jamais"},{"e":"often","f":"souvent"},{"e":"sometimes","f":"parfois"},{"e":"usually","f":"d'habitude"},{"e":"rarely","f":"rarement"},{"e":"once","f":"une fois"},{"e":"twice","f":"deux fois"},{"e":"last","f":"dernier"},{"e":"next","f":"prochain"},{"e":"every day","f":"tous les jours"},{"e":"at the weekend","f":"le week-end"},{"e":"zero","f":"zéro","k":"number"},{"e":"one","f":"un","k":"number"},{"e":"two","f":"deux","k":"number"},{"e":"three","f":"trois","k":"number"},{"e":"four","f":"quatre","k":"number"},{"e":"five","f":"cinq","k":"number"},{"e":"six","f":"six","k":"number"},{"e":"seven","f":"sept","k":"number"},{"e":"eight","f":"huit","k":"number"},{"e":"nine","f":"neuf","k":"number"},{"e":"ten","f":"dix","k":"number"},{"e":"eleven","f":"onze","k":"number"},{"e":"twelve","f":"douze","k":"number"},{"e":"thirteen","f":"treize","k":"number"},{"e":"fourteen","f":"quatorze","k":"number"},{"e":"fifteen","f":"quinze","k":"number"},{"e":"sixteen","f":"seize","k":"number"},{"e":"seventeen","f":"dix-sept","k":"number"},{"e":"eighteen","f":"dix-huit","k":"number"},{"e":"nineteen","f":"dix-neuf","k":"number"},{"e":"twenty","f":"vingt","k":"number"},{"e":"thirty","f":"trente","k":"number"},{"e":"forty","f":"quarante","k":"number"},{"e":"fifty","f":"cinquante","k":"number"},{"e":"sixty","f":"soixante","k":"number"},{"e":"seventy","f":"soixante-dix","k":"number"},{"e":"eighty","f":"quatre-vingts","k":"number"},{"e":"ninety","f":"quatre-vingt-dix","k":"number"},{"e":"a hundred","f":"cent","k":"number"},{"e":"a thousand","f":"mille","k":"number"},{"e":"a million","f":"un million","k":"number"},{"e":"first","f":"premier"},{"e":"second","f":"deuxième"},{"e":"third","f":"troisième"},{"e":"half","f":"moitié"},{"e":"quarter","f":"quart"},{"e":"double","f":"double"},{"e":"o'clock","f":"heure pile"}]},{"id":"v14","name":"Adjectifs et adverbes","tag":"ADJ","color":"#eccc68","items":[{"e":"good","f":"bon","k":"adj"},{"e":"bad","f":"mauvais","k":"adj"},{"e":"big / large","f":"grand","k":"adj"},{"e":"small / little","f":"petit","k":"adj"},{"e":"tall","f":"grand (taille)","k":"adj"},{"e":"short","f":"court, petit (taille)","k":"adj"},{"e":"long","f":"long","k":"adj"},{"e":"wide","f":"large","k":"adj"},{"e":"narrow","f":"étroit","k":"adj"},{"e":"high","f":"haut","k":"adj"},{"e":"low","f":"bas","k":"adj"},{"e":"heavy","f":"lourd","k":"adj"},{"e":"light","f":"léger, clair","k":"adj"},{"e":"fast","f":"rapide","k":"adj"},{"e":"slow","f":"lent","k":"adj"},{"e":"hot","f":"chaud","k":"adj"},{"e":"cold","f":"froid","k":"adj"},{"e":"warm","f":"tiède, chaud","k":"adj"},{"e":"cool","f":"frais","k":"adj"},{"e":"new","f":"nouveau, neuf","k":"adj"},{"e":"old","f":"vieux, ancien","k":"human"},{"e":"young","f":"jeune","k":"human"},{"e":"beautiful","f":"beau, belle","k":"adj"},{"e":"ugly","f":"laid","k":"adj"},{"e":"pretty","f":"joli","k":"adj"},{"e":"nice","f":"sympa, agréable","k":"adj"},{"e":"easy","f":"facile","k":"adj"},{"e":"difficult / hard","f":"difficile, dur","k":"adj"},{"e":"soft","f":"doux, mou","k":"adj"},{"e":"loud","f":"bruyant, fort","k":"adj"},{"e":"quiet","f":"calme","k":"adj"},{"e":"clean","f":"propre","k":"adj"},{"e":"dirty","f":"sale","k":"adj"},{"e":"dry","f":"sec","k":"adj"},{"e":"wet","f":"mouillé","k":"adj"},{"e":"full","f":"plein","k":"adj"},{"e":"empty","f":"vide","k":"adj"},{"e":"open","f":"ouvert","k":"adj"},{"e":"closed","f":"fermé","k":"adj"},{"e":"rich","f":"riche","k":"adj"},{"e":"poor","f":"pauvre","k":"adj"},{"e":"cheap","f":"bon marché","k":"adj"},{"e":"expensive","f":"cher","k":"adj"},{"e":"free","f":"libre, gratuit","k":"adj"},{"e":"busy","f":"occupé","k":"human"},{"e":"tired","f":"fatigué","k":"human"},{"e":"ready","f":"prêt","k":"human"},{"e":"safe","f":"sûr","k":"adj"},{"e":"dangerous","f":"dangereux","k":"adj"},{"e":"important","f":"important","k":"adj"},{"e":"special","f":"spécial","k":"adj"},{"e":"different","f":"différent","k":"adj"},{"e":"same","f":"même","k":"adj"},{"e":"similar","f":"semblable","k":"adj"},{"e":"right","f":"juste, droit","k":"adj"},{"e":"wrong","f":"faux","k":"adj"},{"e":"true","f":"vrai","k":"adj"},{"e":"false","f":"faux","k":"adj"},{"e":"possible","f":"possible","k":"adj"},{"e":"impossible","f":"impossible","k":"adj"},{"e":"famous","f":"célèbre","k":"human"},{"e":"popular","f":"populaire","k":"human"},{"e":"strong","f":"fort","k":"human"},{"e":"weak","f":"faible","k":"human"},{"e":"brave","f":"courageux","k":"human"},{"e":"proud","f":"fier","k":"human"},{"e":"clever / smart","f":"intelligent","k":"human"},{"e":"stupid","f":"stupide","k":"human"},{"e":"funny","f":"drôle","k":"adj"},{"e":"boring","f":"ennuyeux","k":"adj"},{"e":"interesting","f":"intéressant","k":"adj"},{"e":"exciting","f":"passionnant","k":"adj"},{"e":"generous","f":"généreux","k":"human"},{"e":"polite","f":"poli","k":"human"},{"e":"rude","f":"impoli","k":"human"},{"e":"shy","f":"timide","k":"human"},{"e":"lazy","f":"paresseux","k":"human"},{"e":"kind","f":"gentil","k":"human"},{"e":"red","f":"rouge","k":"color"},{"e":"blue","f":"bleu","k":"color"},{"e":"green","f":"vert","k":"color"},{"e":"yellow","f":"jaune","k":"color"},{"e":"black","f":"noir","k":"color"},{"e":"white","f":"blanc","k":"color"},{"e":"grey","f":"gris","k":"color"},{"e":"brown","f":"marron","k":"color"},{"e":"pink","f":"rose","k":"color"},{"e":"purple","f":"violet","k":"color"},{"e":"very","f":"très"},{"e":"quite","f":"assez"},{"e":"too","f":"trop"},{"e":"enough","f":"assez"},{"e":"well","f":"bien"},{"e":"badly","f":"mal"},{"e":"quickly","f":"rapidement"},{"e":"slowly","f":"lentement"}]},{"id":"v15","name":"Nature, météo, animaux","tag":"NATR","color":"#a29bfe","items":[{"e":"nature","f":"nature","k":"gen"},{"e":"weather","f":"météo, temps","k":"gen"},{"e":"sun","f":"soleil","k":"noun"},{"e":"moon","f":"lune","k":"noun"},{"e":"star","f":"étoile","k":"noun"},{"e":"sky","f":"ciel","k":"noun"},{"e":"cloud","f":"nuage","k":"noun"},{"e":"rain","f":"pluie","k":"noun"},{"e":"wind","f":"vent","k":"noun"},{"e":"storm","f":"orage, tempête","k":"noun"},{"e":"thunder","f":"tonnerre","k":"noun"},{"e":"lightning","f":"éclair","k":"noun"},{"e":"cyclone","f":"cyclone","k":"noun"},{"e":"snow","f":"neige","k":"noun"},{"e":"fog","f":"brouillard","k":"noun"},{"e":"rainbow","f":"arc-en-ciel","k":"noun"},{"e":"temperature","f":"température","k":"gen"},{"e":"degree","f":"degré","k":"noun"},{"e":"sunny","f":"ensoleillé","k":"wadj"},{"e":"cloudy","f":"nuageux","k":"wadj"},{"e":"rainy","f":"pluvieux","k":"wadj"},{"e":"windy","f":"venteux","k":"wadj"},{"e":"humid","f":"humide","k":"wadj"},{"e":"climate","f":"climat","k":"gen"},{"e":"mountain","f":"montagne","k":"noun"},{"e":"hill","f":"colline","k":"noun"},{"e":"valley","f":"vallée","k":"noun"},{"e":"river","f":"rivière, fleuve","k":"noun"},{"e":"lake","f":"lac","k":"noun"},{"e":"waterfall","f":"cascade","k":"noun"},{"e":"forest","f":"forêt","k":"noun"},{"e":"jungle","f":"jungle","k":"noun"},{"e":"tree","f":"arbre","k":"noun"},{"e":"flower","f":"fleur","k":"noun"},{"e":"grass","f":"herbe","k":"noun"},{"e":"leaf (leaves)","f":"feuille(s)","k":"noun"},{"e":"plant","f":"plante","k":"noun"},{"e":"soil","f":"sol, terre","k":"gen"},{"e":"earth","f":"terre","k":"gen"},{"e":"fire","f":"feu","k":"gen"},{"e":"volcano","f":"volcan","k":"noun"},{"e":"environment","f":"environnement","k":"gen"},{"e":"animal","f":"animal","k":"noun"},{"e":"dog","f":"chien","k":"noun"},{"e":"cat","f":"chat","k":"noun"},{"e":"horse","f":"cheval","k":"noun"},{"e":"cow","f":"vache","k":"noun"},{"e":"pig","f":"cochon","k":"noun"},{"e":"chicken","f":"poule","k":"noun"},{"e":"bird","f":"oiseau","k":"noun"},{"e":"insect","f":"insecte","k":"noun"},{"e":"mosquito","f":"moustique","k":"noun"},{"e":"snake","f":"serpent","k":"noun"},{"e":"rat","f":"rat","k":"noun"},{"e":"rabbit","f":"lapin","k":"noun"},{"e":"monkey","f":"singe","k":"noun"},{"e":"lion","f":"lion","k":"noun"},{"e":"elephant","f":"éléphant","k":"noun"},{"e":"to protect","f":"protéger","k":"verb"},{"e":"endangered","f":"menacé"}]},{"id":"v16","name":"Ville et transports","tag":"CITY","color":"#55efc4","items":[{"e":"town","f":"ville (petite)","k":"noun"},{"e":"village","f":"village","k":"noun"},{"e":"street","f":"rue","k":"noun"},{"e":"road","f":"route","k":"noun"},{"e":"square","f":"place","k":"noun"},{"e":"bridge","f":"pont","k":"noun"},{"e":"shop","f":"magasin","k":"noun"},{"e":"supermarket","f":"supermarché","k":"noun"},{"e":"market","f":"marché","k":"noun"},{"e":"bakery","f":"boulangerie","k":"noun"},{"e":"restaurant","f":"restaurant","k":"noun"},{"e":"café","f":"café","k":"noun"},{"e":"bank","f":"banque","k":"noun"},{"e":"post office","f":"poste","k":"noun"},{"e":"hospital","f":"hôpital","k":"noun"},{"e":"pharmacy","f":"pharmacie","k":"noun"},{"e":"church","f":"église","k":"noun"},{"e":"museum","f":"musée","k":"noun"},{"e":"cinema","f":"cinéma","k":"noun"},{"e":"park","f":"parc","k":"noun"},{"e":"traffic","f":"circulation","k":"gen"},{"e":"traffic light","f":"feu rouge","k":"gen"},{"e":"corner","f":"coin","k":"noun"},{"e":"crossroads","f":"carrefour","k":"noun"},{"e":"car","f":"voiture","k":"noun"},{"e":"bus","f":"bus","k":"noun"},{"e":"bike","f":"vélo","k":"noun"},{"e":"motorbike","f":"moto","k":"noun"},{"e":"train","f":"train","k":"noun"},{"e":"plane","f":"avion","k":"noun"},{"e":"airport","f":"aéroport","k":"noun"},{"e":"station","f":"gare","k":"noun"},{"e":"ticket","f":"billet","k":"noun"},{"e":"passport","f":"passeport","k":"noun"},{"e":"luggage","f":"bagages","k":"gen"},{"e":"suitcase","f":"valise","k":"noun"},{"e":"journey","f":"trajet","k":"gen"},{"e":"flight","f":"vol","k":"gen"},{"e":"tourist","f":"touriste","k":"gen"},{"e":"hotel","f":"hôtel","k":"noun"},{"e":"map","f":"carte, plan","k":"gen"},{"e":"address","f":"adresse","k":"gen"},{"e":"left","f":"à gauche"},{"e":"right","f":"à droite"},{"e":"straight on","f":"tout droit"},{"e":"turn left","f":"tournez à gauche"},{"e":"far","f":"loin"},{"e":"near","f":"proche"}]},{"id":"v17","name":"Technologie et médias","tag":"TECH","color":"#fd9644","items":[{"e":"computer","f":"ordinateur","k":"noun"},{"e":"laptop","f":"ordinateur portable","k":"noun"},{"e":"tablet","f":"tablette","k":"noun"},{"e":"phone / mobile","f":"téléphone portable","k":"noun"},{"e":"screen","f":"écran","k":"noun"},{"e":"keyboard","f":"clavier","k":"noun"},{"e":"mouse","f":"souris","k":"noun"},{"e":"printer","f":"imprimante","k":"noun"},{"e":"internet","f":"internet","k":"noun"},{"e":"website","f":"site web","k":"noun"},{"e":"link","f":"lien","k":"noun"},{"e":"email","f":"courriel","k":"noun"},{"e":"app","f":"application","k":"noun"},{"e":"password","f":"mot de passe","k":"noun"},{"e":"file","f":"fichier","k":"noun"},{"e":"folder","f":"dossier","k":"noun"},{"e":"video","f":"vidéo","k":"noun"},{"e":"photo","f":"photo","k":"noun"},{"e":"social media","f":"réseaux sociaux","k":"noun"},{"e":"post","f":"publication","k":"gen"},{"e":"like","f":"j'aime","k":"gen"},{"e":"follower","f":"abonné","k":"noun"},{"e":"comment","f":"commentaire","k":"gen"},{"e":"profile","f":"profil","k":"noun"},{"e":"game console","f":"console de jeux","k":"noun"},{"e":"headphones","f":"casque audio","k":"noun"},{"e":"battery","f":"batterie","k":"noun"},{"e":"charger","f":"chargeur","k":"noun"},{"e":"artificial intelligence","f":"intelligence artificielle","k":"noun"},{"e":"newspaper","f":"journal","k":"noun"},{"e":"magazine","f":"magazine","k":"noun"},{"e":"television","f":"télévision","k":"noun"},{"e":"radio","f":"radio","k":"noun"},{"e":"podcast","f":"podcast","k":"noun"},{"e":"to download","f":"télécharger","k":"verb"},{"e":"to click","f":"cliquer","k":"verb"}]},{"id":"v18","name":"Sentiments et expressions","tag":"TALK","color":"#ff8aa1","items":[{"e":"happy","f":"content, heureux","k":"emotion"},{"e":"sad","f":"triste","k":"emotion"},{"e":"angry","f":"en colère","k":"emotion"},{"e":"afraid / scared","f":"effrayé","k":"emotion"},{"e":"worried","f":"inquiet","k":"emotion"},{"e":"nervous","f":"nerveux","k":"emotion"},{"e":"surprised","f":"surpris","k":"emotion"},{"e":"bored","f":"qui s'ennuie","k":"emotion"},{"e":"excited","f":"enthousiaste","k":"emotion"},{"e":"proud of","f":"fier de"},{"e":"jealous","f":"jaloux","k":"emotion"},{"e":"lonely","f":"seul","k":"emotion"},{"e":"embarrassed","f":"gêné","k":"emotion"},{"e":"disappointed","f":"déçu","k":"emotion"},{"e":"I think that…","f":"je pense que…"},{"e":"in my opinion","f":"à mon avis"},{"e":"I agree","f":"je suis d'accord"},{"e":"I disagree","f":"je ne suis pas d'accord"},{"e":"I like / I love","f":"j'aime / j'adore"},{"e":"I hate","f":"je déteste"},{"e":"I prefer…","f":"je préfère…"},{"e":"I'd like…","f":"je voudrais…"},{"e":"I'm sorry","f":"désolé"},{"e":"excuse me","f":"excusez-moi"},{"e":"please","f":"s'il vous plaît"},{"e":"thank you","f":"merci"},{"e":"you're welcome","f":"de rien"},{"e":"pardon?","f":"pardon ?"},{"e":"could you repeat?","f":"pouvez-vous répéter ?"},{"e":"how do you say…?","f":"comment dit-on… ?"},{"e":"what does … mean?","f":"que veut dire … ?"},{"e":"I don't understand","f":"je ne comprends pas"},{"e":"I don't know","f":"je ne sais pas"},{"e":"I'm looking for…","f":"je cherche…"},{"e":"how much is it?","f":"combien ça coûte ?"},{"e":"can I have…?","f":"puis-je avoir… ?"},{"e":"what time is it?","f":"quelle heure est-il ?"},{"e":"where is…?","f":"où est… ?"},{"e":"nice to meet you","f":"enchanté"},{"e":"see you soon","f":"à bientôt"},{"e":"good luck","f":"bonne chance"},{"e":"have fun","f":"amuse-toi bien"},{"e":"welcome","f":"bienvenue"},{"e":"congratulations","f":"félicitations"},{"e":"be careful","f":"fais attention"},{"e":"wait a minute","f":"attends une minute"},{"e":"never mind","f":"peu importe"},{"e":"it depends","f":"ça dépend"}]}]};
+var CX={"v8a:and":"I like surfing ___ swimming.","v8a:but":"I like tennis, ___ I prefer rugby.","v8a:or":"Do you want tea ___ coffee?","v8a:so":"It is raining, ___ we stay at home.","v8a:because":"I am happy ___ it is Friday.","v8a:since":"I have lived here ___ 2020.","v8a:as":"___ I was walking home, it started to rain.","v8a:although / though":"___ it was cold, we went to the beach.","v8a:even though":"___ he was tired, he kept running.","v8a:however":"I wanted to go out. ___, it was raining.","v8a:therefore":"He studied a lot; ___, he passed the exam.","v8a:moreover / furthermore":"The hotel is cheap. ___, it is near the beach.","v8a:besides":"I don't want to go out; ___, I have homework.","v8a:also / too":"She speaks French and she ___ speaks English.","v8a:while / whereas":"I read ___ my brother plays video games.","v8a:if":"___ it rains, we will stay at home.","v8a:unless":"We will go surfing ___ the waves are too big.","v8a:until":"Wait here ___ I come back.","v8a:before":"Wash your hands ___ lunch.","v8a:after":"We play football ___ school.","v8a:when":"Call me ___ you arrive.","v8a:as soon as":"I will call you ___ I get home.","v8a:then":"First we eat, ___ we go to the beach.","v8a:first / firstly":"___, open your book.","v8a:secondly":"Firstly, it is cheap. ___, it is close to school.","v8a:next":"First, mix the eggs. ___, add the flour.","v8a:afterwards":"We had lunch and ___ we went for a walk.","v8a:finally":"After two hours, ___ we arrived.","v8a:at last":"He has ___ finished his homework!","v8a:meanwhile":"I cooked dinner. ___, my sister set the table.","v8a:in conclusion":"___, surfing is a great sport.","v8a:to sum up":"___, we need water, food and a hat.","v8a:in fact":"I thought it was easy, but ___ it was hard.","v8a:indeed":"It is ___ a beautiful island.","v8a:actually":"I thought he was 14, but ___ he is 15.","v8a:for example / for instance":"I like water sports, ___ surfing and diving.","v8a:such as":"I love fruits ___ mangoes and pineapples.","v8a:that is to say":"He is a teenager, ___ he is between 13 and 19.","v8a:on the other hand":"Surfing is fun; ___, it can be dangerous.","v8a:in addition":"___ to football, he plays tennis.","v8a:despite / in spite of":"___ the rain, we played outside.","v8a:instead of":"I drank water ___ juice.","v8a:according to":"___ the forecast, it will be sunny.","v8a:thanks to":"We won ___ our coach.","v8a:because of / due to":"The match was cancelled ___ the storm.","v8a:in order to":"I study every day ___ pass my exam.","v8a:so that":"I speak slowly ___ everybody understands.","v8a:as well as":"He plays rugby ___ football.","v8a:nevertheless":"It was raining. ___, we went to the beach.","v8a:otherwise":"Hurry up, ___ we will be late.","v8a:anyway":"It is raining, but ___ I am going out.","v8a:of course":"Can I borrow your pen? ___!","v8a:maybe / perhaps":"___ we will go to the lagoon tomorrow.","v8b:in":"My book is ___ my bag.","v8b:on":"The phone is ___ the table.","v8b:at":"I wait ___ the bus stop.","v8b:to":"I go ___ school by bus.","v8b:from":"I am ___ Tahiti.","v8b:with":"I go to the beach ___ my friends.","v8b:without":"I can't swim ___ my fins.","v8b:by":"I go to school ___ bus.","v8b:for":"This gift is ___ you.","v8b:of":"He is a friend ___ mine.","v8b:about":"This film is ___ a shark.","v8b:under":"The cat is ___ the bed.","v8b:over":"The plane flies ___ the island.","v8b:above":"The sun is high ___ the mountains.","v8b:below":"The temperature is ___ zero.","v8b:between":"The shop is ___ the bank and the school.","v8b:among":"He is the best ___ my friends.","v8b:behind":"The garden is ___ the house.","v8b:in front of":"The bus stops ___ the school.","v8b:next to":"I sit ___ my best friend.","v8b:near":"My house is ___ the beach.","v8b:across":"We swim ___ the lagoon.","v8b:through":"The train goes ___ a tunnel.","v8b:along":"We walk ___ the beach.","v8b:around":"We run ___ the stadium.","v8b:into":"The boy jumps ___ the water.","v8b:out of":"She takes a pen ___ her bag.","v8b:towards":"The boat goes ___ the island.","v8b:against":"We play ___ another team.","v8b:during":"I sleep ___ the night.","v8b:inside":"It is raining, so we stay ___.","v8b:outside":"It is sunny, so we play ___.","v8b:opposite":"The bank is ___ the post office.","v8b:beside":"She sits ___ me.","v8b:past":"Walk ___ the bakery and turn left.","v8b:up":"Look ___! There is a plane.","v8b:down":"Sit ___, please.","v8b:off":"Turn ___ the light, please.","v8b:since":"I have been here ___ Monday.","v8b:ago":"I met him two years ___.","v8b:within":"I will answer ___ two days.","v8b:beyond":"The island is ___ the reef.","v8c:I":"___ am a student.","v8c:you":"___ are my friend.","v8c:he":"My brother is tall; ___ plays basketball.","v8c:she":"My sister is a doctor; ___ works at the hospital.","v8c:it":"Look at the dog! ___ is big.","v8c:we":"My friends and I are a team; ___ play together.","v8c:they":"My parents are kind; ___ love me.","v8c:me":"Can you help ___, please?","v8c:him":"I see my brother. I talk to ___.","v8c:her":"I see my sister. I talk to ___.","v8c:us":"Come with ___ to the beach!","v8c:them":"I like my friends. I call ___ every day.","v8c:my":"This is ___ bag.","v8c:your":"Is this ___ phone?","v8c:his":"Tom has a bike. It is ___ bike.","v8c:its":"The dog wags ___ tail.","v8c:our":"We love ___ school.","v8c:their":"The students open ___ books.","v8c:this":"___ pen here is mine.","v8c:that":"___ house over there is huge.","v8c:these":"___ shoes here are new.","v8c:those":"___ mountains over there are high.","v8c:who":"___ is your best friend?","v8c:what":"___ is your name?","v8c:where":"___ do you live?","v8c:when":"___ is your birthday?","v8c:why":"___ are you late?","v8c:how":"___ are you today?","v8c:which":"___ colour do you prefer, blue or red?","v8c:whose":"___ bag is this?","v8c:how many":"___ brothers do you have?","v8c:how much":"___ is this T-shirt?","v8c:some":"I would like ___ water.","v8c:any":"Do you have ___ questions?","v8c:many":"There are ___ fish in the lagoon.","v8c:much":"I don't have ___ money.","v8c:a lot of":"We have ___ homework today.","v8c:few":"I have a ___ good friends here.","v8c:little":"There is very ___ water in the bottle.","v8c:all":"___ the students are here.","v8c:every":"I swim ___ day.","v8c:each":"___ student has a book.","v8c:no":"I have ___ time today.","v8c:none":"How many cakes are left? ___!","v8c:another":"I want ___ cookie, please.","v8c:other":"The ___ team is better.","v8c:something":"I want ___ to drink.","v8c:nothing":"There is ___ in the fridge.","v8c:someone":"___ is knocking at the door.","v8c:nobody":"___ is at home.","v8c:everything":"We have ___ we need.","v8c:everybody":"___ loves summer holidays.","v13:today":"___ is Monday.","v13:yesterday":"___ I played football.","v13:tomorrow":"I have an exam ___.","v13:morning":"I eat breakfast in the ___.","v13:afternoon":"We have English class in the ___.","v13:evening":"I do my homework in the ___.","v13:noon":"We have lunch at ___.","v13:midnight":"The party ends at ___.","v13:early":"I get up ___ to go surfing.","v13:late":"Hurry up! We are ___!","v13:now":"I am busy ___.","v13:soon":"See you ___!","v13:already":"I have ___ finished my homework.","v13:yet":"I haven't finished ___.","v13:still":"It is 10 pm and he is ___ working.","v13:again":"Can you repeat, please? Say it ___.","v13:always":"I ___ brush my teeth after lunch.","v13:never":"I ___ eat spicy food.","v13:often":"I ___ go to the beach on Saturdays.","v13:sometimes":"___ I help my mum in the kitchen.","v13:usually":"I ___ get up at six.","v13:rarely":"I ___ watch TV.","v13:once":"I go to the cinema ___ a month.","v13:twice":"I train ___ a week.","v13:last":"Where were you ___ summer?","v13:next":"See you ___ week!","v13:every day":"I brush my teeth ___.","v13:at the weekend":"We go to the beach ___.","v13:first":"Today is my ___ day at school.","v13:second":"It is the ___ time I come here.","v13:third":"He finished ___ in the race.","v13:half":"It is ___ past two.","v13:quarter":"It is a ___ to three.","v13:double":"I would like a ___ ice cream.","v13:o'clock":"The film starts at nine ___.","v14:very":"It is ___ hot today.","v14:quite":"The film was ___ good, but not great.","v14:too":"It is ___ cold to swim.","v14:enough":"I have ___ money to buy a snack.","v14:well":"She speaks English very ___.","v14:badly":"He plays the guitar ___.","v14:quickly":"The boy runs ___.","v14:slowly":"The turtle swims ___.","v14:same":"We are in the ___ class.","v14:open":"The shop is ___ from nine to five.","v14:closed":"The bank is ___ on Sunday.","v14:free":"The entrance is ___ for students.","v14:full":"The bus is ___.","v14:empty":"The bottle is ___.","v14:light":"My school bag is very ___.","v14:right":"Your answer is ___. Well done!","v14:wrong":"Your answer is ___. Try again!","v14:true":"The story is ___. It really happened.","v14:false":"The answer is ___. Try again!","v14:high":"The mountain is very ___.","v14:low":"The temperature is very ___.","v14:short":"My hair is ___.","v14:long":"The film is very ___.","v15:endangered":"Sea turtles are ___ animals.","v15:degree":"It is thirty ___ today.","v16:left":"Turn ___ at the traffic light.","v16:right":"Turn ___ at the bakery.","v16:straight on":"Go ___ for two hundred metres.","v16:turn left":"___ at the corner, please.","v16:far":"The airport is ___ from here.","v16:near":"My school is ___ my house.","v17:like":"He pressed the ___ button under my video.","v4:left":"The wave breaks to the ___.","v4:right":"The wave breaks to the ___.","v4:regular":"A ___ surfer has the left foot in front.","v4:goofy":"A ___ surfer has the right foot in front.","v18:proud of":"I am so ___ you!","v1:kind":"What ___ of music do you like?","v1:way":"Excuse me, which ___ is the beach?","v1:point":"I scored one ___.","v1:time":"What ___ is it?","v1:part":"This is the best ___ of the film.","v1:side":"He sits on my left ___.","v1:end":"It is the ___ of the film.","v1:top":"We climb to the ___ of the mountain.","v1:bottom":"The coin is at the ___ of the lagoon.","v1:line":"Please stand in ___.","v1:sign":"I see a stop ___ on the road.","v1:plan":"Do you have a ___ for Saturday?","v1:goal":"My ___ is to speak English well.","v1:habit":"Brushing your teeth is a good ___.","v1:power":"The wind has a lot of ___.","v1:party":"We have a birthday ___ tonight.","v1:letter":"I wrote a ___ to my grandma.","v1:trip":"We take a school ___ to Moorea.","v1:rights":"Every child has ___."};
+
+/* ---------- helpers ---------- */
+var LS='wordrider.v1';
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function strip(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'');}
+function norm(s){return strip(String(s).toLowerCase()).replace(/[^a-z0-9]/g,'');}
+function rnd(n){return Math.floor(Math.random()*n);}
+function pick(a){return a[rnd(a.length)];}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rnd(i+1);var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function mainOf(e,k){var m=e.replace(/\s*\([^)]*\)/g,'').split(' / ')[0].trim();if(k==='verb')m=m.replace(/^to /,'');return m;}
+function varsOf(e,k){
+  var out=[];var base=e.replace(/\s*\([^)]*\)/g,'');
+  base.split(' / ').forEach(function(x){x=x.trim();out.push(x);if(/^to /.test(x))out.push(x.slice(3));else if(k==='verb')out.push('to '+x);});
+  var m=e.match(/\(([^)]*)\)/);if(m)out.push(m[1]);
+  return out.map(norm).filter(Boolean);
+}
+function lev(a,b){var m=a.length,n=b.length,d=[],i,j;for(i=0;i<=m;i++){d[i]=[i];}for(j=1;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
+function diffHtml(user,right){
+  var u=user.trim(),r=right,out='',L=Math.max(u.length,r.length);
+  for(var i=0;i<L;i++){var a=u[i]||'',b=r[i]||'';
+    if(a&&a.toLowerCase()===b.toLowerCase())out+='<b>'+esc(a)+'</b>';else if(a)out+='<i>'+esc(a)+'</i>';else out+='<i>_</i>';}
+  return out;
+}
+
+/* ---------- data ---------- */
+var ALL=[],BYSEC={},SECS={},ALLU=[],BYF={},SEEN={};
+D.secs.forEach(function(s){
+  SECS[s.id]=s;BYSEC[s.id]=[];
+  s.items.forEach(function(it,i){
+    var o={id:s.id+'|'+i,sec:s.id,e:it.e,f:it.f,k:it.k||'',p:it.p||null};
+    o.key=o.e+'|'+o.f;
+    o.main=mainOf(o.e,o.k);
+    o.vars=varsOf(o.e,o.k);
+    o.canType=o.e.indexOf('…')<0&&o.main.length<=22;
+    BYSEC[s.id].push(o);ALL.push(o);
+    if(!SEEN[o.key]){SEEN[o.key]=1;ALLU.push(o);}
+    (BYF[o.f]=BYF[o.f]||[]).push(o);
+  });
+});
+var TTS=(typeof speechSynthesis!=='undefined')&&(typeof SpeechSynthesisUtterance!=='undefined');
+
+/* ---------- contexts (sentences) ---------- */
+var P={
+ noun:{d:["Let's talk about the ___.","Can you tell me about the ___?","Everybody knows the ___.","I often think about the ___.","Look at the ___!"],
+  v2:["My ___ hurts a little.","The doctor looks at my ___.","Be careful with your ___!"],
+  v3:["In Tahiti, I like to look at the ___.","A fisherman in Moorea tells me about the ___.","On the beach, we talk about the ___."],
+  v4:["At Teahupo'o, the coach explains the ___.","Before the session, my friend asks me about the ___.","A pro surfer talks about the ___."],
+  v5:["At home, we use the ___ every day.","Mum asks me to clean the ___.","Where is the ___? It is in the house."],
+  v6:["The coach talks about the ___.","At the stadium, everybody looks at the ___.","After the match, we talk about the ___."],
+  v9:["I often talk with my ___.","Do you know my ___?","Yesterday I met my ___."],
+  v10:["For lunch, I would like the ___.","In the kitchen, I can see the ___.","Can I have the ___, please?"],
+  v11:["In class, the teacher talks about the ___.","I need the ___ for school.","Please, give me the ___."],
+  v12:["I put on my ___ every morning.","Where is my ___? I can't find it.","My mum washes my ___."],
+  v15:["In nature, I can see the ___.","We learn about the ___ in science.","On the island, we talk about the ___."],
+  v16:["In town, you can see the ___.","Excuse me, where is the ___?","I am looking for the ___."],
+  v17:["I use the ___ every day.","My brother talks about the ___ all the time.","Do you have the ___?"]},
+ gen:{d:["Let's talk about the ___.","Can you tell me about the ___?","Everybody knows the ___.","I often think about the ___."]},
+ verb:{d:["I know how to ___.","Do you know how to ___?","Today, I really want to ___.","Let's ___ together!","My teacher says: “Please, ___!”"]},
+ adj:{d:["That looks ___.","My friend says it is ___.","I think it is ___.","Is it ___ or not?"]},
+ human:{d:["My cousin is very ___.","My teacher is quite ___.","He is ___, I think.","Is your brother ___?"]},
+ color:{d:["My favourite colour is ___.","She is wearing a ___ T-shirt.","I love this ___ bike!"]},
+ day:{d:["Today is ___.","See you on ___!","My favourite day of the week is ___."]},
+ month:{d:["My birthday is in ___.","In ___, we go on holiday.","I was born in ___."]},
+ season:{d:["My favourite season is ___.","I love ___!"]},
+ number:{d:["My lucky number is ___.","Please write the number ___.","How many fingers am I holding up? ___!"]},
+ sportname:{d:["My favourite sport is ___.","I really like ___.","Do you want to try ___ with me?"]},
+ emotion:{d:["I feel ___ today.","My friend looks ___.","After the match, I am ___."]},
+ hungry:{d:["I am very ___.","After the training, we are ___."]},
+ taste:{d:["This food is ___.","The soup is really ___.","This mango is ___."]},
+ wadj:{d:["Today it is ___ in Papeete.","It is ___ outside."]},
+ subject:{d:["My favourite subject is ___.","We have ___ on Monday.","I am good at ___."]}
+};
+function sentencesFor(o){
+  var c=CX[o.sec+':'+o.e];if(c)return [c];
+  var pool=P[o.k];if(!pool)return [];
+  return pool.d.concat(pool[o.sec]||[]);
+}
+function fillWord(o){return o.main;}
+function sentHtml(s,word,mode){
+  var parts=s.split('___');
+  var mid=mode==='blank'?'<span class="blank">&nbsp;&nbsp;&nbsp;</span>':'<span class="en">'+esc(word)+'</span>';
+  return esc(parts[0])+mid+esc(parts.slice(1).join('___'));
+}
+function plain(s,word){return s.replace('___',word);}
+
+/* ---------- save ---------- */
+var SAVE={xp:0,stats:{},set:{n:20,snd:true},best:{},sessions:0};
+function load(){try{var s=JSON.parse(localStorage.getItem(LS));if(s&&typeof s==='object'){for(var k in s)SAVE[k]=s[k];SAVE.set=Object.assign({n:20,snd:true},SAVE.set||{});SAVE.stats=SAVE.stats||{};SAVE.best=SAVE.best||{};}}catch(e){}}
+function save(){try{localStorage.setItem(LS,JSON.stringify(SAVE));}catch(e){}}
+function stat(o){return SAVE.stats[o.key]||(SAVE.stats[o.key]={c:0,w:0,t:0,lt:'',lc:-1});}
+function mastered(o){var s=SAVE.stats[o.key];return !!s&&s.c>=2&&s.c>s.w;}
+function weakWord(o){var s=SAVE.stats[o.key];return !!s&&s.w>s.c;}
+var RANKS=[[0,'Débutant'],[300,'Rider'],[900,'Pro'],[2000,'Barrel Hunter'],[4000,'Légende']];
+function rankOf(xp){var r=0;for(var i=0;i<RANKS.length;i++)if(xp>=RANKS[i][0])r=i;
+  var lo=RANKS[r][0],hi=r+1<RANKS.length?RANKS[r+1][0]:null;return {i:r,name:RANKS[r][1],lo:lo,hi:hi,pct:hi?Math.min(100,(xp-lo)/(hi-lo)*100):100,next:hi?RANKS[r+1][1]:null};}
+
+/* ---------- sound & speech ---------- */
+var AC=null;
+function beep(ok){
+  if(!SAVE.set.snd)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    var t=AC.currentTime;var notes=ok?[523,784]:[220,165];
+    notes.forEach(function(f,i){var o=AC.createOscillator(),g=AC.createGain();o.type=ok?'triangle':'sawtooth';o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.12,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.18);
+      o.connect(g);g.connect(AC.destination);o.start(t+i*.11);o.stop(t+i*.11+.2);});}catch(e){}
+}
+var VOICE=null;
+function pickVoice(){try{var v=speechSynthesis.getVoices();VOICE=v.filter(function(x){return /^en[-_]GB/i.test(x.lang);})[0]||v.filter(function(x){return /^en/i.test(x.lang);})[0]||null;}catch(e){}}
+if(TTS){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}}
+function speak(text,slow){if(!TTS)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang='en-GB';if(VOICE)u.voice=VOICE;u.rate=slow?0.55:0.95;speechSynthesis.speak(u);}catch(e){}}
+var ICON_SP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+
+/* ---------- distractors ---------- */
+function labelOf(o,field){return field==='f'?o.f:o.main;}
+function distract(o,n,field,sameKind){
+  var sec=BYSEC[o.sec];
+  var pools=sameKind&&o.k?[sec.filter(function(x){return x.k===o.k;}),ALLU.filter(function(x){return x.k===o.k;}),sec,ALLU]:[sec,ALLU];
+  var out=[],seen={};seen[norm(labelOf(o,field))]=1;
+  for(var p=0;p<pools.length&&out.length<n;p++){
+    var arr=shuffle(pools[p].slice());
+    for(var i=0;i<arr.length&&out.length<n;i++){
+      var x=arr[i];if(x.f===o.f||x.main===o.main)continue;
+      var l=labelOf(x,field),nl=norm(l);if(!nl||seen[nl])continue;
+      if(field==='f'&&o.vars.some(function(v){return x.vars.indexOf(v)>=0;}))continue;
+      seen[nl]=1;out.push(x);
+    }
+  }
+  return out;
+}
+function acceptFor(o){var set={};(BYF[o.f]||[o]).forEach(function(x){x.vars.forEach(function(v){set[v]=1;});});o.vars.forEach(function(v){set[v]=1;});return set;}
+
+/* ---------- feedback text ---------- */
+var PRAISE=['Bien joué !','Exactement !','Propre !','Tu gères !','Top !','Bravo !','Carrément !','Dans le mille !'];
+var KO=['Pas tout à fait.','Raté, ça arrive.','Oups, pas celle-là.','Presque, mais non.','Pas cette fois.'];
+function history(o,ok){var s=SAVE.stats[o.key];if(!s)return '';
+  if(ok&&s.w>0&&s.c<=s.w)return '<p class="tip">Tu avais déjà buté sur ce mot. Il commence à rentrer.</p>';
+  if(!ok&&s.c>=2)return '<p class="tip">Tu le connaissais pourtant. Un petit coup de fatigue ?</p>';
+  return '';}
+function pair(o){return '<span class="en">'+esc(o.e)+'</span> = <span class="fr">'+esc(o.f)+'</span>';}
+function mk(ok,lines,extra){return {ok:ok,head:ok?pick(PRAISE):pick(KO),html:lines.join(''),extra:extra||''};}
+
+/* ---------- question builders ---------- */
+function choiceQ(o,cfg){
+  var ds=distract(o,3,cfg.field,cfg.sameKind);
+  var opts=[{o:o,t:cfg.field==='f'?o.f:(cfg.fullEn?o.e:o.main)}];
+  ds.forEach(function(x){opts.push({o:x,t:cfg.field==='f'?x.f:(cfg.fullEn?x.e:x.main)});});
+  if(opts.length<2)return null;
+  shuffle(opts);
+  var q={type:cfg.type,tag:cfg.tag,mode:'choice',o:o,prompt:cfg.prompt,sub:cfg.sub||'',pre:cfg.pre||'',opts:opts,audio:cfg.audio||null,ctx:cfg.ctx||null};
+  q.correct=opts.findIndex(function(x){return x.o===o;});
+  q.evaluate=function(i){
+    var pk=q.opts[i],ok=(pk.o===o);
+    return cfg.fb(ok,pk.o,o);
+  };
+  return q;
+}
+function inputQ(o,cfg){
+  var main=cfg.answer||o.main;
+  var q={type:cfg.type,tag:cfg.tag,mode:'input',o:o,prompt:cfg.prompt,sub:cfg.sub||'',pre:cfg.pre||'',audio:cfg.audio||null,ctx:cfg.ctx||null,hintText:main,answer:main};
+  var acc=cfg.accept||acceptFor(o);
+  q.evaluate=function(val){
+    var nv=norm(val);var ok=!!acc[nv];
+    var near=false;
+    if(!ok&&nv.length>=4){for(var k in acc){if(Math.abs(k.length-nv.length)<=1&&lev(k,nv)===1){near=true;break;}}}
+    return cfg.fb(ok,val,o,near,main);
+  };
+  return q;
+}
+function qEnFr(o){
+  return choiceQ(o,{type:'enfr',tag:'Traduction',field:'f',sameKind:true,audio:TTS?o.main:null,
+    prompt:'Que veut dire <span class="en">'+esc(o.e)+'</span>&nbsp;?',
+    fb:function(ok,pk,o){var l=[];
+      if(ok)l.push('<p class="full">'+pair(o)+'</p>');
+      else{l.push('<p class="full">La bonne réponse : <span class="fr">'+esc(o.f)+'</span></p>');
+        l.push('<p>Celle que tu as choisie, <span class="fr">'+esc(pk.f)+'</span>, se dit <span class="en">'+esc(pk.e)+'</span>.</p>');}
+      l.push(history(o,ok));return mk(ok,l);}});
+}
+function qFrEn(o){
+  return choiceQ(o,{type:'fren',tag:'Anglais',field:'e',fullEn:true,sameKind:true,
+    prompt:'Comment dit-on <span class="fr">'+esc(o.f)+'</span> en anglais&nbsp;?',
+    fb:function(ok,pk,o){var l=[];
+      if(ok)l.push('<p class="full">'+pair(o)+'</p>');
+      else{l.push('<p class="full">La bonne réponse : <span class="en">'+esc(o.e)+'</span></p>');
+        l.push('<p><span class="en">'+esc(pk.e)+'</span>, c\'est <span class="fr">'+esc(pk.f)+'</span>.</p>');}
+      l.push(history(o,ok));return mk(ok,l);},audio:null});
+}
+function qType(o){
+  return inputQ(o,{type:'type',tag:'Écris-le',
+    prompt:'Écris en anglais&nbsp;: <span class="fr">'+esc(o.f)+'</span>',sub:o.k==='verb'||o.k==='verbx'?'Écris le verbe sans « to ».':'',
+    fb:function(ok,val,o,near,main){var l=[];
+      if(ok)l.push('<p class="full">'+pair(o)+'</p>');
+      else{
+        l.push('<p class="full">Il fallait écrire : <span class="en">'+esc(main)+'</span></p>');
+        l.push('<p class="diff">Toi : '+diffHtml(val||'',main)+'</p>');
+        if(near)l.push('<p class="tip">Une lettre près. C\'est la même idée, mais l\'orthographe compte.</p>');
+        if(o.main!==o.e)l.push('<p class="tip">Autres formes acceptées : '+esc(o.e)+'.</p>');}
+      l.push(history(o,ok));return mk(ok,l);}});
+}
+function ctxPick(o){
+  var ss=sentencesFor(o);if(!ss.length)return null;
+  var st=stat(o);var idx=rnd(ss.length);
+  if(ss.length>1&&idx===st.lc)idx=(idx+1)%ss.length;
+  return {s:ss[idx],i:idx};
+}
+function qGap(o){
+  var c=ctxPick(o);if(!c)return null;
+  var q=choiceQ(o,{type:'gap',tag:'Dans la phrase',field:'e',sameKind:true,ctx:c.i,
+    prompt:'',pre:'<p class="sent">'+sentHtml(c.s,'','blank')+'</p><span class="clue">Sens à retrouver : <b>'+esc(o.f)+'</b></span>',
+    fb:function(ok,pk,o){var l=[];
+      l.push('<p class="full">'+sentHtml(c.s,o.main,'fill')+'</p>');
+      l.push('<p>'+pair(o)+'</p>');
+      if(!ok)l.push('<p>Ton choix, <span class="en">'+esc(pk.main)+'</span>, veut dire <span class="fr">'+esc(pk.f)+'</span>. Il ne va pas ici.</p>');
+      l.push(history(o,ok));return mk(ok,l);}});
+  if(q)q.sentence=c.s;return q;
+}
+function qGapType(o){
+  var c=ctxPick(o);if(!c)return null;
+  var q=inputQ(o,{type:'gaptype',tag:'Complète la phrase',ctx:c.i,
+    prompt:'',pre:'<p class="sent">'+sentHtml(c.s,'','blank')+'</p><span class="clue">Sens à retrouver : <b>'+esc(o.f)+'</b></span>',
+    fb:function(ok,val,o,near,main){var l=[];
+      l.push('<p class="full">'+sentHtml(c.s,main,'fill')+'</p>');
+      l.push('<p>'+pair(o)+'</p>');
+      if(!ok){l.push('<p class="diff">Toi : '+diffHtml(val||'',main)+'</p>');
+        if(near)l.push('<p class="tip">Une lettre près. Surveille l\'orthographe.</p>');}
+      l.push(history(o,ok));return mk(ok,l);}});
+  q.sentence=c.s;return q;
+}
+function qScramble(o){
+  var w=o.main.replace(/^to /,'');
+  if(!/^[A-Za-z']{3,12}$/.test(w))return null;
+  var letters=w.split('');var tries=0,sh;
+  do{sh=shuffle(letters.slice());tries++;}while(sh.join('')===w&&tries<8);
+  var q={type:'scramble',tag:'Mots mélangés',mode:'scramble',o:o,prompt:'Remets les lettres dans l\'ordre&nbsp;: <span class="fr">'+esc(o.f)+'</span>',sub:'',pre:'',letters:sh,answer:w,hintText:w};
+  q.evaluate=function(val){
+    var ok=norm(val)===norm(w)||!!acceptFor(o)[norm(val)];var l=[];
+    if(ok)l.push('<p class="full">'+pair(o)+'</p>');
+    else{l.push('<p class="full">Le mot était : <span class="en">'+esc(w)+'</span></p>');l.push('<p class="diff">Toi : '+diffHtml(val,w)+'</p>');l.push('<p>'+pair(o)+'</p>');}
+    l.push(history(o,ok));return mk(ok,l);};
+  return q;
+}
+function qTF(o){
+  var truth=Math.random()<0.5;var shown=o,wrong=null;
+  if(!truth){wrong=distract(o,1,'f',true)[0];if(!wrong)truth=true;}
+  var fr=truth?o.f:wrong.f;
+  var q={type:'tf',tag:'Vrai ou faux',mode:'tf',o:o,prompt:'<span class="en">'+esc(o.e)+'</span> veut dire <span class="fr">'+esc(fr)+'</span>.',sub:'',pre:'',audio:TTS?o.main:null};
+  q.opts=[{t:'Vrai',v:true},{t:'Faux',v:false}];q.correct=truth?0:1;
+  q.evaluate=function(i){
+    var ans=q.opts[i].v,ok=(ans===truth),l=[];
+    if(truth){l.push('<p class="full">'+(ok?'C\'est vrai : ':'C\'était vrai : ')+pair(o)+'</p>');}
+    else{l.push('<p class="full">'+(ok?'Faux, en effet.':'En fait, c\'était faux.')+' '+pair(o)+'</p>');
+      l.push('<p><span class="fr">'+esc(wrong.f)+'</span>, ça se dit <span class="en">'+esc(wrong.e)+'</span>.</p>');}
+    l.push(history(o,ok));return mk(ok,l);};
+  return q;
+}
+function qListenFr(o){
+  if(!TTS)return null;
+  var q=choiceQ(o,{type:'listenfr',tag:'Écoute',field:'f',sameKind:true,audio:o.main,
+    prompt:'Écoute le mot, puis choisis sa traduction.',
+    fb:function(ok,pk,o){var l=[];
+      l.push('<p class="full">Tu as entendu <span class="en">'+esc(o.main)+'</span> : <span class="fr">'+esc(o.f)+'</span></p>');
+      if(!ok)l.push('<p>Ton choix, <span class="fr">'+esc(pk.f)+'</span>, se dit <span class="en">'+esc(pk.e)+'</span>.</p>');
+      l.push(history(o,ok));return mk(ok,l);}});
+  if(q)q.autoplay=true;return q;
+}
+function qListenType(o){
+  if(!TTS||!o.canType)return null;
+  var q=inputQ(o,{type:'listentype',tag:'Dictée',audio:o.main,
+    prompt:'Écoute et écris le mot en anglais.',sub:'Tu peux réécouter en lent.',
+    accept:(function(){var s={};o.vars.forEach(function(v){s[v]=1;});return s;})(),
+    fb:function(ok,val,o,near,main){var l=[];
+      if(ok)l.push('<p class="full">'+pair(o)+'</p>');
+      else{l.push('<p class="full">Le mot était : <span class="en">'+esc(main)+'</span> ('+esc(o.f)+')</p>');l.push('<p class="diff">Toi : '+diffHtml(val||'',main)+'</p>');
+        if(near)l.push('<p class="tip">Une lettre près. En anglais, le son et l\'écriture ne se ressemblent pas toujours.</p>');}
+      l.push(history(o,ok));return mk(ok,l);}});
+  q.autoplay=true;return q;
+}
+function formQ(o,which){
+  var idx=which==='past'?0:1;
+  var label=which==='past'?'prétérit':'participe passé';
+  var right=o.p[idx];
+  var acc={};right.split(' / ').forEach(function(x){acc[norm(x)]=1;});
+  var q={type:which,tag:'Verbes irréguliers',mode:'input',o:o,prompt:'Quel est le <b>'+label+'</b> de <span class="en">'+esc(o.e)+'</span>&nbsp;?',sub:'Sens du verbe : '+o.f,pre:'',hintText:right.split(' / ')[0],answer:right.split(' / ')[0],audio:null};
+  q.evaluate=function(val){
+    var nv=norm(val),ok=!!acc[nv],l=[];
+    var chain=esc(o.e)+' – '+esc(o.p[0])+' – '+esc(o.p[1]);
+    if(ok)l.push('<p class="full"><span class="en">'+chain+'</span></p>');
+    else{l.push('<p class="full">Le '+label+' de <span class="en">'+esc(o.e)+'</span> est <span class="en">'+esc(right)+'</span></p>');
+      l.push('<p class="diff">Toi : '+diffHtml(val||'',right.split(' / ')[0])+'</p>');
+      l.push('<p class="tip">La série complète : <span class="en">'+chain+'</span></p>');}
+    l.push('<p>'+pair(o)+'</p>');l.push(history(o,ok));return mk(ok,l);};
+  return q;
+}
+function qChain(o){
+  var irr=BYSEC.v7.filter(function(x){return x!==o;});
+  var line=function(x){return x.e+' – '+x.p[0]+' – '+x.p[1];};
+  var opts=[{t:line(o),o:o}];var seen={};seen[line(o)]=1;
+  var guard=0;
+  while(opts.length<4&&guard++<60){
+    var a=pick(irr),b=pick(irr),c=pick(irr);var v=Math.random();var t;
+    if(v<.4)t=o.e+' – '+a.p[0]+' – '+b.p[1];
+    else if(v<.7)t=o.e+' – '+o.p[1]+' – '+o.p[0];
+    else t=o.e+' – '+o.e+'ed – '+o.e+'ed';
+    if(!seen[t]){seen[t]=1;opts.push({t:t,o:null});}
+  }
+  if(opts.length<3)return null;
+  shuffle(opts);
+  var q={type:'chain',tag:'Verbes irréguliers',mode:'choice',o:o,prompt:'Quelle série est correcte pour <span class="en">'+esc(o.e)+'</span> ('+esc(o.f)+')&nbsp;?',sub:'infinitif – prétérit – participe passé',pre:'',opts:opts,audio:null};
+  q.correct=opts.findIndex(function(x){return x.o===o;});
+  q.evaluate=function(i){var ok=(i===q.correct),l=[];
+    l.push('<p class="full"><span class="en">'+esc(line(o))+'</span></p>');
+    if(!ok)l.push('<p>Ta série, <span class="en">'+esc(q.opts[i].t)+'</span>, n\'est pas la bonne pour ce verbe. Les verbes irréguliers s\'apprennent en bloc.</p>');
+    l.push('<p>'+pair(o)+'</p>');l.push(history(o,ok));return mk(ok,l);};
+  return q;
+}
+function qMatch(words){
+  var items=words.map(function(o,i){return {o:o,i:i};});
+  var q={type:'match',tag:'Association',mode:'match',o:items[0].o,words:words,prompt:'Relie chaque mot anglais à sa traduction.',sub:'Touche un mot, puis sa traduction.',pre:'',
+    left:items.slice(),right:shuffle(items.slice())};
+  q.evaluate=function(errs,errWords){
+    var ok=errs<=1;var l=[];
+    l.push('<p class="full">'+(errs===0?'Sans faute !':errs===1?'Une seule erreur.':errs+' erreurs.')+'</p>');
+    words.forEach(function(o){l.push('<p>'+pair(o)+(errWords[o.id]?' <span class="tip">(à revoir)</span>':'')+'</p>');});
+    return mk(ok,l);};
+  return q;
+}
+
+/* ---------- selection ---------- */
+function weight(o){var s=SAVE.stats[o.key];if(!s)return 3;var x=(s.w+1)/(s.c+1)+0.25;if(Date.now()-s.t<600000)x*=0.3;return x*2;}
+function pickWords(pool,n,excl){
+  var arr=pool.filter(function(o){return !(excl&&excl[o.key]);});var chosen=[];
+  while(chosen.length<n&&arr.length){
+    var tot=0,i;for(i=0;i<arr.length;i++)tot+=weight(arr[i]);
+    var r=Math.random()*tot;for(i=0;i<arr.length;i++){r-=weight(arr[i]);if(r<=0)break;}
+    if(i>=arr.length)i=arr.length-1;chosen.push(arr.splice(i,1)[0]);
+    // keep entries with the same French meaning out of one session
+    var f=chosen[chosen.length-1].f;arr=arr.filter(function(x){return x.f!==f;});
+  }
+  return chosen;
+}
+function eligible(o){
+  var t=[['enfr',3],['fren',3],['tf',1.4]];
+  if(o.canType)t.push(['type',2.2]);
+  if(sentencesFor(o).length){t.push(['gap',4.5]);if(o.canType)t.push(['gaptype',1.8]);}
+  if(o.canType&&/^[A-Za-z']{3,12}$/.test(o.main.replace(/^to /,'')))t.push(['scramble',1.5]);
+  if(TTS){t.push(['listenfr',1.1]);if(o.canType)t.push(['listentype',1.1]);}
+  if(o.p){t.push(['past',3],['pp',3],['chain',2]);}
+  return t;
+}
+var BUILD={enfr:qEnFr,fren:qFrEn,type:qType,gap:qGap,gaptype:qGapType,scramble:qScramble,tf:qTF,listenfr:qListenFr,listentype:qListenType,
+  past:function(o){return formQ(o,'past');},pp:function(o){return formQ(o,'pp');},chain:qChain};
+function makeQuestion(o,lastType){
+  var st=SAVE.stats[o.key]||{};
+  var el=eligible(o).map(function(x){var w=x[1];if(x[0]===lastType)w*=0.15;if(x[0]===st.lt)w*=0.4;return [x[0],w];});
+  for(var guard=0;guard<10;guard++){
+    var tot=el.reduce(function(a,x){return a+x[1];},0),r=Math.random()*tot,ty=el[0][0];
+    for(var i=0;i<el.length;i++){r-=el[i][1];if(r<=0){ty=el[i][0];break;}}
+    var q=BUILD[ty](o);if(q)return q;
+    el=el.filter(function(x){return x[0]!==ty;});if(!el.length)break;
+  }
+  return qEnFr(o)||qTF(o);
+}
+
+/* ---------- state & rendering ---------- */
+var app=null,SES=null,Q=null,ANS=null;
+function mastery(sid){var a=BYSEC[sid];var m=0,w=0;a.forEach(function(o){if(mastered(o))m++;if(weakWord(o))w++;});return {m:m,w:w,n:a.length};}
+function weakPool(){return ALLU.filter(weakWord);}
+function render(html){app.innerHTML=html;}
+
+function homeHtml(){
+  var r=rankOf(SAVE.xp);
+  var allM=0,allW=0;ALLU.forEach(function(o){if(mastered(o))allM++;if(weakWord(o))allW++;});
+  var wp=weakPool().length;
+  var cards=D.secs.map(function(s){var m=mastery(s.id);var pct=Math.round(m.m/m.n*100);
+    return '<button class="theme" style="--c:'+s.color+'" data-act="start" data-scope="'+s.id+'">'+
+      '<span class="tag">'+esc(s.tag)+'</span><span class="nm">'+esc(s.name)+'</span>'+
+      '<span class="mini" aria-hidden="true"><i style="width:'+pct+'%"></i></span>'+
+      '<span class="meta"><span>'+m.n+' mots · '+pct+'&nbsp;% acquis</span>'+(m.w?'<span class="rv">'+m.w+' à revoir</span>':'')+'</span></button>';}).join('');
+  return '<div class="top"><div class="brand"><svg viewBox="0 0 38 24" aria-hidden="true"><path d="M1 17c5 0 5-8 10-8s5 8 10 8 5-8 10-8 5 8 7 8" fill="none" stroke="#19d3c5" stroke-width="3" stroke-linecap="round"/><path d="M1 22c5 0 5-6 10-6s5 6 10 6 5-6 10-6 5 6 7 6" fill="none" stroke="#ff6a4d" stroke-width="3" stroke-linecap="round"/></svg>Word <b>Rider</b></div>'+
+   '<div class="tools"><button class="chip" aria-pressed="'+(SAVE.set.snd?'true':'false')+'" data-act="snd">Sons</button><button class="chip" data-act="save">Ma progression</button></div></div>'+
+   '<div class="rank"><div><div class="lvl">'+esc(r.name)+'</div><div class="sub">'+(r.next?'Prochain rang : '+esc(r.next)+' à '+r.hi+' XP':'Rang maximum atteint')+'</div></div>'+
+   '<div class="xp tabular">'+SAVE.xp+' XP<small>'+allM+' / '+ALLU.length+' mots acquis</small></div><div class="barwrap" style="grid-column:1/-1"><div class="bar"><i style="width:'+r.pct+'%"></i></div></div></div>'+
+   '<div class="hero"><button class="start" data-act="start" data-scope="all"><div><h2>Tous les mots</h2><p>Un mélange de tous les thèmes. Les mots que tu rates reviennent plus souvent.</p></div><span class="go">Lancer la session</span>'+
+   '<svg class="wave" viewBox="0 0 200 80" aria-hidden="true"><path d="M0 50c25 0 25-30 50-30s25 30 50 30 25-30 50-30 25 30 50 30v30H0z" fill="#2b0c05"/></svg></button>'+
+   '<div class="side"><div class="panel"><h3>Questions par session</h3><div class="seg">'+[10,20,30].map(function(n){return '<button data-act="n" data-n="'+n+'" aria-pressed="'+(SAVE.set.n===n?'true':'false')+'">'+n+'</button>';}).join('')+'</div></div>'+
+   '<button class="weak" data-act="start" data-scope="weak" '+(wp<4?'disabled':'')+'>'+(wp<4?'Mes points faibles (pas encore assez d\'erreurs)':'Réviser mes '+wp+' points faibles')+'</button></div></div>'+
+   '<h2 class="sec">Par thème</h2><div class="grid">'+cards+'</div>';
+}
+function showHome(){SES=null;Q=null;render(homeHtml());window.scrollTo(0,0);}
+
+function startSession(scope){
+  var pool=scope==='all'?ALLU:scope==='weak'?weakPool():BYSEC[scope];
+  if(!pool||pool.length<4)return;
+  var n=Math.min(SAVE.set.n,pool.length);
+  var slots=[];
+  var nMatch=(n>=10&&pool.length>=12)?Math.floor(n/8):0;
+  var nWords=n-nMatch;
+  var words=pickWords(pool,nWords);
+  var used={};words.forEach(function(o){used[o.key]=1;});
+  var matches=[];
+  for(var m=0;m<nMatch;m++){var mw=pickWords(pool,5,used);if(mw.length<5)break;mw.forEach(function(o){used[o.key]=1;});matches.push(mw);}
+  var items=words.map(function(o){return {w:o};});
+  matches.forEach(function(mw,i){var pos=Math.min(items.length,(i+1)*8-1);items.splice(pos,0,{m:mw});});
+  SES={scope:scope,name:scope==='all'?'Tous les mots':scope==='weak'?'Mes points faibles':SECS[scope].name,color:scope==='all'||scope==='weak'?'#ff6a4d':SECS[scope].color,
+    items:items,i:0,score:0,xp:0,streak:0,best:0,wrong:[],lastType:'',done:0};
+  nextQ();
+}
+function nextQ(){
+  if(SES.i>=SES.items.length){return finish();}
+  var it=SES.items[SES.i];
+  Q=it.m?qMatch(it.m):makeQuestion(it.w,SES.lastType);
+  ANS=null;Q.hinted=false;Q.sel=[];
+  drawQ();
+}
+function topHtml(){
+  var pct=SES.done/SES.items.length*100;
+  return '<div class="qtop"><button class="back" data-act="home">Quitter</button><div class="qmeta"><div class="nm">'+esc(SES.name)+'</div><div class="st tabular">Question '+(Math.min(SES.i+1,SES.items.length))+' sur '+SES.items.length+'</div></div>'+
+  '<span class="badge fire tabular" title="Série de bonnes réponses">x'+SES.streak+'</span><span class="badge xpg tabular">+'+SES.xp+' XP</span></div>'+
+  '<div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="'+SES.items.length+'" aria-valuenow="'+SES.done+'"><i style="width:'+pct+'%"></i>'+
+  '<svg class="rider" style="left:'+Math.max(2,pct)+'%" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#ffd23f"/><path d="M6 20c4 0 4-6 8-6s4 6 8 6 4-6 8-6" fill="none" stroke="#061826" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="17" cy="25" rx="9" ry="2.4" fill="#ff6a4d"/></svg></div>';
+}
+var ICON_PLAY=ICON_SP;
+function drawQ(){
+  var h=topHtml();
+  h+='<div class="qcard"><span class="qtag">'+esc(Q.tag)+'</span>';
+  if(Q.pre)h+=Q.pre;
+  if(Q.prompt)h+='<p class="qprompt">'+Q.prompt+'</p>';
+  if(Q.sub)h+='<p class="qsub">'+esc(Q.sub)+'</p>';
+  if(Q.audio&&TTS&&(Q.type==='listenfr'||Q.type==='listentype'))h+='<div class="hintrow"><button class="play" data-act="say" data-slow="0">'+ICON_SP+'Écouter</button><button class="play slow" data-act="say" data-slow="1">'+ICON_SP+'Lent</button></div>';
+  else if(Q.audio&&TTS)h+='<div class="hintrow"><button class="play slow" data-act="say" data-slow="0">'+ICON_SP+'Écouter</button></div>';
+  if(Q.mode==='choice'){
+    h+='<div class="opts" id="opts">'+Q.opts.map(function(o,i){return '<button class="opt" data-act="pick" data-i="'+i+'"><span class="k">'+(i+1)+'</span><span>'+esc(o.t)+'</span></button>';}).join('')+'</div>';
+  }else if(Q.mode==='tf'){
+    h+='<div class="opts tf" id="opts">'+Q.opts.map(function(o,i){return '<button class="opt" data-act="pick" data-i="'+i+'">'+o.t+'</button>';}).join('')+'</div>';
+  }else if(Q.mode==='input'){
+    h+='<div class="ans"><input id="ans" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Ta réponse" placeholder="Ta réponse en anglais"><button class="btn" data-act="submit">Valider</button></div>'+
+       '<div class="hintrow"><button class="hint" data-act="hint">Indice (-3 XP)</button><span class="hintshow" id="hintshow"></span></div>';
+  }else if(Q.mode==='scramble'){
+    h+='<div class="slots" id="slots"></div><div class="pool" id="pool"></div><div class="ans"><button class="btn" data-act="submit" id="sbtn" disabled>Valider</button><button class="btn ghost" data-act="reshuffle">Tout effacer</button></div>'+
+       '<div class="hintrow"><button class="hint" data-act="hint">Indice (-3 XP)</button><span class="hintshow" id="hintshow"></span></div>';
+  }else if(Q.mode==='match'){
+    h+='<div class="mgrid"><div class="mcol" id="mL">'+Q.left.map(function(x){return '<button class="mi en" data-act="ml" data-i="'+x.i+'">'+esc(x.o.main)+'</button>';}).join('')+'</div>'+
+       '<div class="mcol" id="mR">'+Q.right.map(function(x){return '<button class="mi" data-act="mr" data-i="'+x.i+'">'+esc(x.o.f)+'</button>';}).join('')+'</div></div>';
+    Q.errs=0;Q.errW={};Q.pairs=0;Q.cur=null;
+  }
+  h+='<div id="fb"></div></div>';
+  render(h);
+  if(Q.mode==='scramble')drawScramble();
+  var inp=document.getElementById('ans');if(inp)inp.focus({preventScroll:true});
+  if(Q.autoplay&&Q.audio)setTimeout(function(){speak(Q.audio,false);},250);
+}
+function drawScramble(){
+  var L=Q.letters,placed=Q.sel;
+  var sl='';for(var i=0;i<Q.answer.length;i++){var idx=placed[i];sl+='<button class="slot'+(idx!==undefined?' f':'')+'" data-act="unplace" data-pos="'+i+'" aria-label="'+(idx!==undefined?'Retirer '+L[idx]:'Case vide')+'">'+(idx!==undefined?esc(L[idx]):'')+'</button>';}
+  document.getElementById('slots').innerHTML=sl;
+  document.getElementById('pool').innerHTML=L.map(function(c,i){return '<button class="tile" data-act="place" data-i="'+i+'" '+(placed.indexOf(i)>=0?'disabled':'')+'>'+esc(c)+'</button>';}).join('');
+  var b=document.getElementById('sbtn');if(b)b.disabled=placed.length!==Q.answer.length;
+}
+function wordFromScramble(){return Q.sel.map(function(i){return Q.letters[i];}).join('');}
+
+function say(slow){if(Q&&Q.audio)speak(Q.audio,slow);}
+function finishAnswer(res,userVal){
+  ANS={res:res};
+  var o=Q.o;
+  if(Q.type!=='match'){
+    var st=stat(o);if(res.ok)st.c++;else st.w++;st.t=Date.now();st.lt=Q.type;if(Q.ctx!==undefined&&Q.ctx!==null)st.lc=Q.ctx;
+  }
+  var gain=0;
+  if(res.ok){SES.score++;SES.streak++;SES.best=Math.max(SES.best,SES.streak);gain=10+Math.min(5,Math.floor(SES.streak/3));
+    if(Q.mode==='input'||Q.mode==='scramble')gain+=4;if(Q.hinted)gain-=3;}
+  else{SES.streak=0;if(Q.type!=='match')SES.wrong.push(o);}
+  if(Q.type==='match'){Q.words.forEach(function(w){var st=stat(w);if(Q.errW[w.id])st.w++;else st.c++;st.t=Date.now();st.lt='match';if(Q.errW[w.id])SES.wrong.push(w);});
+    gain=Math.max(0,res.ok?(Q.errs===0?30:20):6);}
+  gain=Math.max(res.ok?5:0,gain);
+  SES.xp+=gain;SAVE.xp+=gain;SES.lastType=Q.type;SES.done++;SES.i++;
+  save();beep(res.ok);
+  var fb=document.getElementById('fb');
+  var last=SES.i>=SES.items.length;
+  var streakMsg=res.ok&&SES.streak>=3&&SES.streak%3===0?'<p class="tip">Série de '+SES.streak+' bonnes réponses.</p>':'';
+  fb.innerHTML='<div class="fb '+(res.ok?'ok':'ko')+'" role="status" aria-live="polite"><h4>'+esc(res.head)+(gain?' <span style="color:var(--sun)">+'+gain+' XP</span>':'')+'</h4>'+res.html+streakMsg+
+    '<div class="row"><button class="btn" data-act="next" id="nextbtn">'+(last?'Voir mon score':'Continuer')+'</button>'+(TTS&&o&&Q.type!=='match'?'<button class="sbtn" data-act="sayfb" aria-label="Écouter le mot">'+ICON_SP+'</button>':'')+'</div></div>';
+  var nb=document.getElementById('nextbtn');if(nb)nb.focus({preventScroll:true});
+  floatXp(gain);
+  refreshTop();
+  fb.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function refreshTop(){
+  var pct=SES.done/SES.items.length*100;
+  var b=document.querySelectorAll('.badge');if(b[0])b[0].textContent='x'+SES.streak;if(b[1])b[1].textContent='+'+SES.xp+' XP';
+  var t=document.querySelector('.track>i');if(t)t.style.width=pct+'%';
+  var r=document.querySelector('.rider');if(r)r.style.left=Math.max(2,pct)+'%';
+}
+function floatXp(g){if(!g)return;var d=document.createElement('div');d.className='xpfloat';d.textContent='+'+g;document.body.appendChild(d);setTimeout(function(){d.remove();},1000);}
+
+function disableAll(){var all=document.querySelectorAll('#opts .opt');for(var i=0;i<all.length;i++)all[i].disabled=true;}
+function onPick(i){
+  if(ANS)return;disableAll();
+  var res=Q.evaluate(i);
+  var btns=document.querySelectorAll('#opts .opt');
+  if(Q.mode==='tf'){btns[Q.correct].classList.add('good');if(!res.ok)btns[i].classList.add('bad');}
+  else{btns[Q.correct].classList.add('good');if(!res.ok)btns[i].classList.add('bad');}
+  finishAnswer(res);
+}
+function onSubmit(){
+  if(ANS)return;
+  var val;
+  if(Q.mode==='input'){var inp=document.getElementById('ans');val=inp.value;if(!val.trim()){inp.focus();return;}
+    var res=Q.evaluate(val);inp.disabled=true;inp.classList.add(res.ok?'good':'bad');
+    var sb=document.querySelector('[data-act="submit"]');if(sb)sb.disabled=true;var hb=document.querySelector('[data-act="hint"]');if(hb)hb.disabled=true;
+    finishAnswer(res,val);
+  }else if(Q.mode==='scramble'){
+    val=wordFromScramble();if(val.length!==Q.answer.length)return;var res2=Q.evaluate(val);
+    var sl=document.querySelectorAll('.slot');for(var i=0;i<sl.length;i++){sl[i].classList.add(res2.ok?'good':'bad');sl[i].disabled=true;}
+    document.querySelectorAll('.tile').forEach(function(t){t.disabled=true;});
+    document.querySelectorAll('[data-act="submit"],[data-act="reshuffle"],[data-act="hint"]').forEach(function(b){b.disabled=true;});
+    finishAnswer(res2,val);
+  }
+}
+function onHint(){
+  if(ANS||Q.hinted)return;Q.hinted=true;
+  var t=Q.hintText||Q.answer||'';var s=t.charAt(0)+' '+t.slice(1).replace(/[^ ]/g,'_').split('').join(' ');
+  var el=document.getElementById('hintshow');if(el)el.textContent=s.replace(/_ _/g,'_ _');
+  var hb=document.querySelector('[data-act="hint"]');if(hb)hb.disabled=true;
+}
+function onMatch(side,i){
+  if(ANS)return;
+  var L=document.querySelectorAll('#mL .mi'),R=document.querySelectorAll('#mR .mi');
+  function btn(list,idx){for(var k=0;k<list.length;k++)if(+list[k].getAttribute('data-i')===idx)return list[k];}
+  if(side==='l'){if(Q.cur!==null){var pb=btn(L,Q.cur);if(pb)pb.classList.remove('sel');}Q.cur=i;btn(L,i).classList.add('sel');return;}
+  if(Q.cur===null){return;}
+  var lb=btn(L,Q.cur),rb=btn(R,i);if(lb.classList.contains('done')||rb.classList.contains('done'))return;
+  if(Q.cur===i){lb.classList.remove('sel');lb.classList.add('done');rb.classList.add('done');lb.disabled=true;rb.disabled=true;Q.pairs++;Q.cur=null;beep(true);
+    if(Q.pairs===Q.words.length){var res=Q.evaluate(Q.errs,Q.errW);finishAnswer(res);}
+  }else{Q.errs++;var wrongW=Q.words[Q.cur];Q.errW[wrongW.id]=1;lb.classList.add('shake');rb.classList.add('shake');beep(false);
+    var cur=Q.cur;setTimeout(function(){lb.classList.remove('shake');rb.classList.remove('shake');},380);
+    lb.classList.remove('sel');Q.cur=null;}
+}
+
+function finish(){
+  SAVE.sessions=(SAVE.sessions||0)+1;
+  var n=SES.items.length,pct=Math.round(SES.score/n*100);
+  var key=SES.scope;var prev=SAVE.best[key]||0;var newBest=pct>prev;if(newBest)SAVE.best[key]=pct;
+  var bonus=pct===100?50:pct>=80?20:0;SAVE.xp+=bonus;SES.xp+=bonus;save();
+  var r=rankOf(SAVE.xp);
+  var uniq={},wr=[];SES.wrong.forEach(function(o){if(!uniq[o.key]){uniq[o.key]=1;wr.push(o);}});
+  var msg=pct===100?'Session parfaite':pct>=80?'Très solide':pct>=60?'Bon début, ça se travaille':'On y retourne, les mots reviendront';
+  var h='<div class="top"><div class="brand">Word <b>Rider</b></div></div><div class="res"><div class="big tabular">'+SES.score+'<small> / '+n+'</small></div><h2>'+msg+'</h2>'+
+   '<div class="stats"><div class="stat"><b class="tabular">'+pct+'&nbsp;%</b><span>de réussite</span></div><div class="stat"><b class="tabular">+'+SES.xp+'</b><span>XP gagnés'+(bonus?' (dont '+bonus+' de bonus)':'')+'</span></div><div class="stat"><b class="tabular">x'+SES.best+'</b><span>meilleure série</span></div><div class="stat"><b>'+esc(r.name)+'</b><span>rang actuel</span></div></div>'+
+   (newBest&&prev>0?'<p class="note">Nouveau record sur ce thème (ancien : '+prev+'&nbsp;%).</p>':'');
+  if(wr.length){h+='<div class="rev"><h3 style="font-family:var(--display);font-weight:400;font-size:22px;margin:10px 0 0">À retenir</h3>'+wr.map(function(o){return '<div class="it"><span class="en">'+esc(o.e)+'</span><span class="fr">'+esc(o.f)+'</span></div>';}).join('')+'</div>';}
+  else h+='<p class="note">Aucun mot raté. Les mêmes mots reviendront dans d\'autres phrases et d\'autres formats.</p>';
+  h+='<div class="ctas"><button class="btn" data-act="replay">Rejouer ce thème</button><button class="btn ghost" data-act="home">Accueil</button></div></div>';
+  render(h);window.scrollTo(0,0);
+  if(pct>=80)confetti();
+}
+function confetti(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var cols=['#ff6a4d','#ffd23f','#19d3c5','#3d9bff','#b07cff','#35e08f'];
+  for(var i=0;i<46;i++){var d=document.createElement('i');d.className='confetti';d.style.left=rnd(100)+'vw';d.style.background=pick(cols);d.style.animationDuration=(1.6+Math.random()*1.6)+'s';d.style.animationDelay=(Math.random()*.5)+'s';document.body.appendChild(d);(function(x){setTimeout(function(){x.remove();},3800);})(d);}
+}
+
+function showSave(){
+  var code='';try{code=btoa(unescape(encodeURIComponent(JSON.stringify(SAVE))));}catch(e){}
+  render('<div class="top"><div class="brand">Word <b>Rider</b></div><button class="back" data-act="home">Retour</button></div><div class="sheet"><h2 class="sec" style="margin-top:10px">Ma progression</h2>'+
+   '<p class="note">Ta progression est gardée dans ce navigateur. Pour la garder ailleurs, copie ce code et colle-le sur un autre appareil.</p>'+
+   '<textarea id="code" readonly aria-label="Code de sauvegarde">'+esc(code)+'</textarea><div class="ctas" style="justify-content:flex-start"><button class="btn ghost" data-act="copy">Copier le code</button></div>'+
+   '<h2 class="sec" style="font-size:20px">Restaurer</h2><textarea id="restore" placeholder="Colle ici un code de sauvegarde" aria-label="Code à restaurer"></textarea>'+
+   '<div class="ctas" style="justify-content:flex-start"><button class="btn" data-act="restore">Restaurer</button></div><p class="note" id="smsg"></p>'+
+   '<h2 class="sec" style="font-size:20px">Tout remettre à zéro</h2><div class="ctas" style="justify-content:flex-start"><button class="btn ghost" data-act="reset1" id="rst">Effacer ma progression</button></div></div>');
+}
+
+/* ---------- events ---------- */
+function onClick(e){
+  var t=e.target.closest('[data-act]');if(!t||t.disabled)return;
+  var a=t.getAttribute('data-act');
+  if(a==='start')return startSession(t.getAttribute('data-scope'));
+  if(a==='home'){return showHome();}
+  if(a==='n'){SAVE.set.n=+t.getAttribute('data-n');save();return showHome();}
+  if(a==='snd'){SAVE.set.snd=!SAVE.set.snd;save();return showHome();}
+  if(a==='save')return showSave();
+  if(a==='pick')return onPick(+t.getAttribute('data-i'));
+  if(a==='submit')return onSubmit();
+  if(a==='hint')return onHint();
+  if(a==='next'){return nextQ();}
+  if(a==='replay'){return startSession(SES.scope);}
+  if(a==='say')return say(t.getAttribute('data-slow')==='1');
+  if(a==='sayfb'){if(Q&&Q.o)speak(Q.o.main,false);return;}
+  if(a==='ml')return onMatch('l',+t.getAttribute('data-i'));
+  if(a==='mr')return onMatch('r',+t.getAttribute('data-i'));
+  if(a==='place'){if(ANS)return;var i=+t.getAttribute('data-i');if(Q.sel.length<Q.answer.length&&Q.sel.indexOf(i)<0){Q.sel.push(i);drawScramble();}return;}
+  if(a==='unplace'){if(ANS)return;var p=+t.getAttribute('data-pos');if(p<Q.sel.length){Q.sel.splice(p,1);drawScramble();}return;}
+  if(a==='reshuffle'){if(ANS)return;Q.sel=[];drawScramble();return;}
+  if(a==='copy'){var c=document.getElementById('code');c.select();try{navigator.clipboard.writeText(c.value).then(function(){document.getElementById('smsg').textContent='Code copié.';},function(){document.getElementById('smsg').textContent='Copie le code à la main (il est sélectionné).';});}catch(x){document.getElementById('smsg').textContent='Copie le code à la main (il est sélectionné).';}return;}
+  if(a==='restore'){var v=document.getElementById('restore').value.trim();try{var o=JSON.parse(decodeURIComponent(escape(atob(v))));if(o&&typeof o==='object'&&o.stats){for(var k in o)SAVE[k]=o[k];save();document.getElementById('smsg').textContent='Progression restaurée.';}else throw 0;}catch(x){document.getElementById('smsg').textContent='Ce code n\'est pas valide.';}return;}
+  if(a==='reset1'){t.textContent='Confirmer : tout effacer';t.setAttribute('data-act','reset2');return;}
+  if(a==='reset2'){SAVE={xp:0,stats:{},set:SAVE.set,best:{},sessions:0};save();return showHome();}
+}
+function onKey(e){
+  if(!SES||!Q)return;
+  var tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(e.key==='Enter'){
+    if(ANS){e.preventDefault();nextQ();return;}
+    if(Q.mode==='input'||Q.mode==='scramble'){e.preventDefault();onSubmit();}
+    return;
+  }
+  if(ANS||tag==='INPUT'||tag==='TEXTAREA')return;
+  if((Q.mode==='choice'||Q.mode==='tf')&&/^[1-4]$/.test(e.key)){var i=+e.key-1;if(Q.opts[i])onPick(i);}
+  if(Q.mode==='scramble'){
+    if(e.key==='Backspace'){Q.sel.pop();drawScramble();return;}
+    if(/^[a-zA-Z']$/.test(e.key)){var c=e.key.toLowerCase();for(var j=0;j<Q.letters.length;j++){if(Q.letters[j].toLowerCase()===c&&Q.sel.indexOf(j)<0&&Q.sel.length<Q.answer.length){Q.sel.push(j);drawScramble();break;}}}
+  }
+}
+
+/* ---------- boot / test hooks ---------- */
+var api={ALL:ALL,ALLU:ALLU,BYSEC:BYSEC,sentencesFor:sentencesFor,makeQuestion:makeQuestion,eligible:eligible,BUILD:BUILD,qMatch:qMatch,norm:norm,SAVE:SAVE,acceptFor:acceptFor};
+if(typeof window!=='undefined')window.WR=api;else if(typeof globalThis!=='undefined')globalThis.WR=api;
+if(typeof document!=='undefined'&&document.getElementById){
+  app=document.getElementById('app');load();
+  app.addEventListener('click',onClick);document.addEventListener('keydown',onKey);
+  showHome();
+}
+})();
+</script>

@@ -1,5 +1,5 @@
 import sys, json, re
-sys.path.insert(0, "/tmp/work")
+import os; HERE=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from data1 import S
 from data2 import S2
 
@@ -143,7 +143,7 @@ for i, (sid, name, tag, raw) in enumerate(secdef):
     secs.append({"id": sid, "name": name, "tag": tag, "color": colors[i % len(colors)], "items": items})
 
 cx = {}
-for line in open("/tmp/work/cx.txt", encoding="utf-8"):
+for line in open(os.path.join(HERE,"cx.txt"), encoding="utf-8"):
     line = line.rstrip("\n")
     if not line: continue
     k, v = line.split("|", 1)
@@ -159,7 +159,7 @@ total = sum(len(s["items"]) for s in secs)
 with_sent = 0
 print("sections", len(secs), "entries", total)
 data = {"secs": secs}
-tpl = open("/tmp/work/template.html", encoding="utf-8").read()
+tpl = open(os.path.join(HERE,"template.html"), encoding="utf-8").read()
 out = tpl.replace("/*DATA*/null", json.dumps(data, ensure_ascii=False, separators=(",", ":"))) \
          .replace("/*CX*/null", json.dumps(cx, ensure_ascii=False, separators=(",", ":")))
 open(sys.argv[1], "w", encoding="utf-8").write(out)

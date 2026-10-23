@@ -4,21 +4,28 @@ Vocabulaire anglais essentiel pour un élève de 3ème : 1 328 mots et expressio
 
 ## Contenu
 
-- `index.html` : application d'exercices interactifs (Word Rider). Un seul fichier, il s'ouvre dans un navigateur, sans connexion. Activité en plusieurs formats, avec retour après chaque réponse, par thème ou sur tous les mots.
-- `pdf/mots_anglais_3eme.pdf` : la liste de vocabulaire en 15 pages, avec colonnes colorées en alternance.
+- `index.html` : l'application d'exercices **Word Rider**. Elle fonctionne hors ligne une fois installée.
+- `pdf/mots_anglais_3eme.pdf` : la liste de vocabulaire en 15 pages, colonnes colorées en alternance.
 - `sources/` : les données et les scripts qui génèrent le PDF et l'application.
+- `manifest.webmanifest`, `sw.js`, `icons/`, `fonts/` : ce qui rend l'application installable et utilisable sans connexion.
 
-## Utiliser l'application
+## Installer sur iPhone (hors ligne)
 
-Ouvrir `index.html` dans un navigateur. Avec GitHub Pages activé (Settings, Pages, branche `main`, dossier racine), elle est aussi en ligne à l'adresse du dépôt.
+1. Dans les réglages du dépôt : Settings, Pages, Source « Deploy from a branch », branche `main`, dossier `/ (root)`.
+2. Sur l'iPhone, ouvrir l'adresse `https://courpatas.github.io/English-for-the-children/` **dans Safari**. Attendre que la page s'affiche entièrement (connexion nécessaire cette fois-là seulement).
+3. Appuyer sur Partager, puis « Sur l'écran d'accueil », puis Ajouter.
+4. Lancer l'application depuis son icône. Elle marche ensuite en mode avion.
 
-## Régénérer
+La progression (XP, mots acquis) est enregistrée sur l'appareil. L'application installée et Safari ont chacun leur propre sauvegarde : le bouton « Ma progression » donne un code pour transférer.
 
-Les scripts de `sources/` attendent leurs fichiers dans `/tmp/work`.
+## Mettre à jour
+
+Après toute modification, régénérer puis changer le numéro de version pour que les téléphones rechargent le cache :
 
 ```
-python3 sources/gen.py index.html            # application
-python3 sources/build.py pdf/mots_anglais_3eme.pdf   # PDF (reportlab)
+python3 sources/gen.py sources/app_fragment.html
+python3 sources/make_pwa.py sources/app_fragment.html v2
+python3 sources/build.py pdf/mots_anglais_3eme.pdf    # PDF (reportlab)
 ```
 
-`cx.txt` contient les phrases à trous : une ligne par mot, au format `thème:mot|phrase avec ___`.
+`sources/cx.txt` contient les phrases à trous : une ligne par mot, au format `thème:mot|phrase avec ___`.
