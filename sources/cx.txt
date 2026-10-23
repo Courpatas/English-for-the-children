@@ -1,0 +1,238 @@
+v8a:and|I like surfing ___ swimming.
+v8a:but|I like tennis, ___ I prefer rugby.
+v8a:or|Do you want tea ___ coffee?
+v8a:so|It is raining, ___ we stay at home.
+v8a:because|I am happy ___ it is Friday.
+v8a:since|I have lived here ___ 2020.
+v8a:as|___ I was walking home, it started to rain.
+v8a:although / though|___ it was cold, we went to the beach.
+v8a:even though|___ he was tired, he kept running.
+v8a:however|I wanted to go out. ___, it was raining.
+v8a:therefore|He studied a lot; ___, he passed the exam.
+v8a:moreover / furthermore|The hotel is cheap. ___, it is near the beach.
+v8a:besides|I don't want to go out; ___, I have homework.
+v8a:also / too|She speaks French and she ___ speaks English.
+v8a:while / whereas|I read ___ my brother plays video games.
+v8a:if|___ it rains, we will stay at home.
+v8a:unless|We will go surfing ___ the waves are too big.
+v8a:until|Wait here ___ I come back.
+v8a:before|Wash your hands ___ lunch.
+v8a:after|We play football ___ school.
+v8a:when|Call me ___ you arrive.
+v8a:as soon as|I will call you ___ I get home.
+v8a:then|First we eat, ___ we go to the beach.
+v8a:first / firstly|___, open your book.
+v8a:secondly|Firstly, it is cheap. ___, it is close to school.
+v8a:next|First, mix the eggs. ___, add the flour.
+v8a:afterwards|We had lunch and ___ we went for a walk.
+v8a:finally|After two hours, ___ we arrived.
+v8a:at last|He has ___ finished his homework!
+v8a:meanwhile|I cooked dinner. ___, my sister set the table.
+v8a:in conclusion|___, surfing is a great sport.
+v8a:to sum up|___, we need water, food and a hat.
+v8a:in fact|I thought it was easy, but ___ it was hard.
+v8a:indeed|It is ___ a beautiful island.
+v8a:actually|I thought he was 14, but ___ he is 15.
+v8a:for example / for instance|I like water sports, ___ surfing and diving.
+v8a:such as|I love fruits ___ mangoes and pineapples.
+v8a:that is to say|He is a teenager, ___ he is between 13 and 19.
+v8a:on the other hand|Surfing is fun; ___, it can be dangerous.
+v8a:in addition|___ to football, he plays tennis.
+v8a:despite / in spite of|___ the rain, we played outside.
+v8a:instead of|I drank water ___ juice.
+v8a:according to|___ the forecast, it will be sunny.
+v8a:thanks to|We won ___ our coach.
+v8a:because of / due to|The match was cancelled ___ the storm.
+v8a:in order to|I study every day ___ pass my exam.
+v8a:so that|I speak slowly ___ everybody understands.
+v8a:as well as|He plays rugby ___ football.
+v8a:nevertheless|It was raining. ___, we went to the beach.
+v8a:otherwise|Hurry up, ___ we will be late.
+v8a:anyway|It is raining, but ___ I am going out.
+v8a:of course|Can I borrow your pen? ___!
+v8a:maybe / perhaps|___ we will go to the lagoon tomorrow.
+v8b:in|My book is ___ my bag.
+v8b:on|The phone is ___ the table.
+v8b:at|I wait ___ the bus stop.
+v8b:to|I go ___ school by bus.
+v8b:from|I am ___ Tahiti.
+v8b:with|I go to the beach ___ my friends.
+v8b:without|I can't swim ___ my fins.
+v8b:by|I go to school ___ bus.
+v8b:for|This gift is ___ you.
+v8b:of|He is a friend ___ mine.
+v8b:about|This film is ___ a shark.
+v8b:under|The cat is ___ the bed.
+v8b:over|The plane flies ___ the island.
+v8b:above|The sun is high ___ the mountains.
+v8b:below|The temperature is ___ zero.
+v8b:between|The shop is ___ the bank and the school.
+v8b:among|He is the best ___ my friends.
+v8b:behind|The garden is ___ the house.
+v8b:in front of|The bus stops ___ the school.
+v8b:next to|I sit ___ my best friend.
+v8b:near|My house is ___ the beach.
+v8b:across|We swim ___ the lagoon.
+v8b:through|The train goes ___ a tunnel.
+v8b:along|We walk ___ the beach.
+v8b:around|We run ___ the stadium.
+v8b:into|The boy jumps ___ the water.
+v8b:out of|She takes a pen ___ her bag.
+v8b:towards|The boat goes ___ the island.
+v8b:against|We play ___ another team.
+v8b:during|I sleep ___ the night.
+v8b:inside|It is raining, so we stay ___.
+v8b:outside|It is sunny, so we play ___.
+v8b:opposite|The bank is ___ the post office.
+v8b:beside|She sits ___ me.
+v8b:past|Walk ___ the bakery and turn left.
+v8b:up|Look ___! There is a plane.
+v8b:down|Sit ___, please.
+v8b:off|Turn ___ the light, please.
+v8b:since|I have been here ___ Monday.
+v8b:ago|I met him two years ___.
+v8b:within|I will answer ___ two days.
+v8b:beyond|The island is ___ the reef.
+v8c:I|___ am a student.
+v8c:you|___ are my friend.
+v8c:he|My brother is tall; ___ plays basketball.
+v8c:she|My sister is a doctor; ___ works at the hospital.
+v8c:it|Look at the dog! ___ is big.
+v8c:we|My friends and I are a team; ___ play together.
+v8c:they|My parents are kind; ___ love me.
+v8c:me|Can you help ___, please?
+v8c:him|I see my brother. I talk to ___.
+v8c:her|I see my sister. I talk to ___.
+v8c:us|Come with ___ to the beach!
+v8c:them|I like my friends. I call ___ every day.
+v8c:my|This is ___ bag.
+v8c:your|Is this ___ phone?
+v8c:his|Tom has a bike. It is ___ bike.
+v8c:its|The dog wags ___ tail.
+v8c:our|We love ___ school.
+v8c:their|The students open ___ books.
+v8c:this|___ pen here is mine.
+v8c:that|___ house over there is huge.
+v8c:these|___ shoes here are new.
+v8c:those|___ mountains over there are high.
+v8c:who|___ is your best friend?
+v8c:what|___ is your name?
+v8c:where|___ do you live?
+v8c:when|___ is your birthday?
+v8c:why|___ are you late?
+v8c:how|___ are you today?
+v8c:which|___ colour do you prefer, blue or red?
+v8c:whose|___ bag is this?
+v8c:how many|___ brothers do you have?
+v8c:how much|___ is this T-shirt?
+v8c:some|I would like ___ water.
+v8c:any|Do you have ___ questions?
+v8c:many|There are ___ fish in the lagoon.
+v8c:much|I don't have ___ money.
+v8c:a lot of|We have ___ homework today.
+v8c:few|I have a ___ good friends here.
+v8c:little|There is very ___ water in the bottle.
+v8c:all|___ the students are here.
+v8c:every|I swim ___ day.
+v8c:each|___ student has a book.
+v8c:no|I have ___ time today.
+v8c:none|How many cakes are left? ___!
+v8c:another|I want ___ cookie, please.
+v8c:other|The ___ team is better.
+v8c:something|I want ___ to drink.
+v8c:nothing|There is ___ in the fridge.
+v8c:someone|___ is knocking at the door.
+v8c:nobody|___ is at home.
+v8c:everything|We have ___ we need.
+v8c:everybody|___ loves summer holidays.
+v13:today|___ is Monday.
+v13:yesterday|___ I played football.
+v13:tomorrow|I have an exam ___.
+v13:morning|I eat breakfast in the ___.
+v13:afternoon|We have English class in the ___.
+v13:evening|I do my homework in the ___.
+v13:noon|We have lunch at ___.
+v13:midnight|The party ends at ___.
+v13:early|I get up ___ to go surfing.
+v13:late|Hurry up! We are ___!
+v13:now|I am busy ___.
+v13:soon|See you ___!
+v13:already|I have ___ finished my homework.
+v13:yet|I haven't finished ___.
+v13:still|It is 10 pm and he is ___ working.
+v13:again|Can you repeat, please? Say it ___.
+v13:always|I ___ brush my teeth after lunch.
+v13:never|I ___ eat spicy food.
+v13:often|I ___ go to the beach on Saturdays.
+v13:sometimes|___ I help my mum in the kitchen.
+v13:usually|I ___ get up at six.
+v13:rarely|I ___ watch TV.
+v13:once|I go to the cinema ___ a month.
+v13:twice|I train ___ a week.
+v13:last|Where were you ___ summer?
+v13:next|See you ___ week!
+v13:every day|I brush my teeth ___.
+v13:at the weekend|We go to the beach ___.
+v13:first|Today is my ___ day at school.
+v13:second|It is the ___ time I come here.
+v13:third|He finished ___ in the race.
+v13:half|It is ___ past two.
+v13:quarter|It is a ___ to three.
+v13:double|I would like a ___ ice cream.
+v13:o'clock|The film starts at nine ___.
+v14:very|It is ___ hot today.
+v14:quite|The film was ___ good, but not great.
+v14:too|It is ___ cold to swim.
+v14:enough|I have ___ money to buy a snack.
+v14:well|She speaks English very ___.
+v14:badly|He plays the guitar ___.
+v14:quickly|The boy runs ___.
+v14:slowly|The turtle swims ___.
+v14:same|We are in the ___ class.
+v14:open|The shop is ___ from nine to five.
+v14:closed|The bank is ___ on Sunday.
+v14:free|The entrance is ___ for students.
+v14:full|The bus is ___.
+v14:empty|The bottle is ___.
+v14:light|My school bag is very ___.
+v14:right|Your answer is ___. Well done!
+v14:wrong|Your answer is ___. Try again!
+v14:true|The story is ___. It really happened.
+v14:false|The answer is ___. Try again!
+v14:high|The mountain is very ___.
+v14:low|The temperature is very ___.
+v14:short|My hair is ___.
+v14:long|The film is very ___.
+v15:endangered|Sea turtles are ___ animals.
+v15:degree|It is thirty ___ today.
+v16:left|Turn ___ at the traffic light.
+v16:right|Turn ___ at the bakery.
+v16:straight on|Go ___ for two hundred metres.
+v16:turn left|___ at the corner, please.
+v16:far|The airport is ___ from here.
+v16:near|My school is ___ my house.
+v17:like|He pressed the ___ button under my video.
+v4:left|The wave breaks to the ___.
+v4:right|The wave breaks to the ___.
+v4:regular|A ___ surfer has the left foot in front.
+v4:goofy|A ___ surfer has the right foot in front.
+v18:proud of|I am so ___ you!
+v1:kind|What ___ of music do you like?
+v1:way|Excuse me, which ___ is the beach?
+v1:point|I scored one ___.
+v1:time|What ___ is it?
+v1:part|This is the best ___ of the film.
+v1:side|He sits on my left ___.
+v1:end|It is the ___ of the film.
+v1:top|We climb to the ___ of the mountain.
+v1:bottom|The coin is at the ___ of the lagoon.
+v1:line|Please stand in ___.
+v1:sign|I see a stop ___ on the road.
+v1:plan|Do you have a ___ for Saturday?
+v1:goal|My ___ is to speak English well.
+v1:habit|Brushing your teeth is a good ___.
+v1:power|The wind has a lot of ___.
+v1:party|We have a birthday ___ tonight.
+v1:letter|I wrote a ___ to my grandma.
+v1:trip|We take a school ___ to Moorea.
+v1:rights|Every child has ___.
