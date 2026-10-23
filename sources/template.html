@@ -30,6 +30,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(-
 .tools{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;color:var(--text)}
 .chip:hover{background:var(--surface2)}
+.chip.off{font-weight:600;font-size:13px;cursor:default}
+.chip.off[data-s="ok"]{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.chip.off[data-s="wait"]{color:var(--sun)}
+.chip.off[data-s="ko"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
 .chip[aria-pressed="true"]{background:var(--lagoon);color:#032b2a;border-color:var(--lagoon)}
 
 /* rank */
@@ -578,7 +582,7 @@ function homeHtml(){
       '<span class="mini" aria-hidden="true"><i style="width:'+pct+'%"></i></span>'+
       '<span class="meta"><span>'+m.n+' mots · '+pct+'&nbsp;% acquis</span>'+(m.w?'<span class="rv">'+m.w+' à revoir</span>':'')+'</span></button>';}).join('');
   return '<div class="top"><div class="brand"><svg viewBox="0 0 38 24" aria-hidden="true"><path d="M1 17c5 0 5-8 10-8s5 8 10 8 5-8 10-8 5 8 7 8" fill="none" stroke="#19d3c5" stroke-width="3" stroke-linecap="round"/><path d="M1 22c5 0 5-6 10-6s5 6 10 6 5-6 10-6 5 6 7 6" fill="none" stroke="#ff6a4d" stroke-width="3" stroke-linecap="round"/></svg>Word <b>Rider</b></div>'+
-   '<div class="tools"><button class="chip" aria-pressed="'+(SAVE.set.snd?'true':'false')+'" data-act="snd">Sons</button><button class="chip" data-act="save">Ma progression</button></div></div>'+
+   '<div class="tools"><button class="chip" aria-pressed="'+(SAVE.set.snd?'true':'false')+'" data-act="snd">Sons</button><button class="chip" data-act="save">Ma progression</button><span class="chip off" id="off" hidden></span></div></div>'+
    '<div class="rank"><div><div class="lvl">'+esc(r.name)+'</div><div class="sub">'+(r.next?'Prochain rang : '+esc(r.next)+' à '+r.hi+' XP':'Rang maximum atteint')+'</div></div>'+
    '<div class="xp tabular">'+SAVE.xp+' XP<small>'+allM+' / '+ALLU.length+' mots acquis</small></div><div class="barwrap" style="grid-column:1/-1"><div class="bar"><i style="width:'+r.pct+'%"></i></div></div></div>'+
    '<div class="hero"><button class="start" data-act="start" data-scope="all"><div><h2>Tous les mots</h2><p>Un mélange de tous les thèmes. Les mots que tu rates reviennent plus souvent.</p></div><span class="go">Lancer la session</span>'+
@@ -587,7 +591,21 @@ function homeHtml(){
    '<button class="weak" data-act="start" data-scope="weak" '+(wp<4?'disabled':'')+'>'+(wp<4?'Mes points faibles (pas encore assez d\'erreurs)':'Réviser mes '+wp+' points faibles')+'</button></div></div>'+
    '<h2 class="sec">Par thème</h2><div class="grid">'+cards+'</div>';
 }
-function showHome(){SES=null;Q=null;render(homeHtml());window.scrollTo(0,0);}
+function checkOffline(){
+  var el=document.getElementById('off');
+  if(!el||!('serviceWorker' in navigator)||!window.caches)return;
+  el.hidden=false;
+  function set(t,c){var e=document.getElementById('off');if(e){e.textContent=t;e.setAttribute('data-s',c);}}
+  set('Hors ligne : vérification…','wait');
+  navigator.serviceWorker.getRegistration().then(function(reg){
+    if(!reg){set('Hors ligne : installation… rouvre la page','wait');return;}
+    return caches.match('index.html',{ignoreVary:true,ignoreSearch:true}).then(function(hit){
+      if(hit)set('Prêt hors ligne ✓','ok');
+      else set(reg.installing||reg.waiting?'Hors ligne : préparation…':'Hors ligne : indisponible','wait');
+    });
+  }).catch(function(){set('Hors ligne : indisponible','ko');});
+}
+function showHome(){SES=null;Q=null;render(homeHtml());window.scrollTo(0,0);checkOffline();setTimeout(checkOffline,2500);}
 
 function startSession(scope){
   var pool=scope==='all'?ALLU:scope==='weak'?weakPool():BYSEC[scope];

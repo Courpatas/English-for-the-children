@@ -119,26 +119,59 @@ files += ["fonts/" + f for f in sorted(os.listdir(os.path.join(ROOT, "fonts")))]
 sw = """/* Word Rider : cache hors ligne. Changer VERSION pour forcer une mise à jour. */
 const VERSION = 'word-rider-%s';
 const FILES = %s;
+
+/* Réponse sans indicateur de redirection (Safari refuse de servir une page redirigée). */
+async function clean(res) {
+  if (!res.redirected) return res;
+  const body = await res.blob();
+  return new Response(body, {status: res.status, statusText: res.statusText, headers: res.headers});
+}
+
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(VERSION);
+    /* chaque fichier séparément : un échec ne bloque pas tout le reste */
+    await Promise.all(FILES.map(async f => {
+      try {
+        const res = await fetch(new Request(f, {cache: 'reload'}));
+        if (res && res.ok) await cache.put(new Request(f), await clean(res));
+      } catch (err) {}
+    }));
+    /* la page d'accueil doit être là, sinon on réessaiera à la prochaine visite */
+    if (!(await cache.match('index.html'))) throw new Error('index.html non mis en cache');
+    await self.skipWaiting();
+  })());
 });
+
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('word-rider-') && k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys()
+    .then(ks => Promise.all(ks.filter(k => k.startsWith('word-rider-') && k !== VERSION).map(k => caches.delete(k))))
+    .then(() => self.clients.claim()));
 });
+
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request, {ignoreSearch: true}).then(hit => {
-      if (hit) return hit;
-      return fetch(e.request).then(res => {
-        if (res && res.ok && new URL(e.request.url).origin === location.origin) {
-          const copy = res.clone();
-          caches.open(VERSION).then(c => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => caches.match('index.html'));
-    })
-  );
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const opts = {ignoreSearch: true, ignoreVary: true};
+  e.respondWith((async () => {
+    const hit = await caches.match(req, opts);
+    if (hit) return hit;
+    /* ouverture de l'appli (adresse du dossier, index.html, lancement depuis l'écran d'accueil) */
+    if (req.mode === 'navigate') {
+      try { return await fetch(req); }
+      catch (err) { const home = await caches.match('index.html', opts); if (home) return home; throw err; }
+    }
+    try {
+      const res = await fetch(req);
+      if (res && res.ok && new URL(req.url).origin === location.origin) {
+        const cache = await caches.open(VERSION);
+        cache.put(req, (await clean(res.clone())));
+      }
+      return res;
+    } catch (err) {
+      return Response.error();
+    }
+  })());
 });
 """ % (VERSION, json.dumps(files, indent=2))
 open(os.path.join(ROOT, "sw.js"), "w", encoding="utf-8").write(sw)

@@ -24,7 +24,7 @@ Après toute modification, régénérer puis changer le numéro de version pour 
 
 ```
 python3 sources/gen.py sources/app_fragment.html
-python3 sources/make_pwa.py sources/app_fragment.html v2
+python3 sources/make_pwa.py sources/app_fragment.html v3
 python3 sources/build.py pdf/mots_anglais_3eme.pdf    # PDF (reportlab)
 ```
 
